@@ -1,0 +1,82 @@
+/* ClinicFlow design tokens — see docs/DESIGN.md. Components use tokens only. */
+@import "tailwindcss";
+
+/* Disable Tailwind's default palette so only ClinicFlow tokens exist. */
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --color-primary: #126b67;
+  --color-primary-hover: #0e5653;
+  --color-primary-subtle: #e3f0ef;
+  --color-secondary: #527f9b;
+  --color-secondary-text: #416b86;
+  --color-background: #f5f8f8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef3f3;
+  --color-border: #d5dfdf;
+  --color-text: #203334;
+  --color-text-muted: #586c6d;
+  --color-success: #26856b;
+  --color-success-text: #1f6f59;
+  --color-success-subtle: #e4f2ed;
+  --color-warning: #d69a38;
+  --color-warning-text: #8f6419;
+  --color-warning-subtle: #faf0de;
+  --color-danger: #c64e4e;
+  --color-danger-text: #a33a3a;
+  --color-danger-subtle: #f8e6e6;
+
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius: 6px;
+
+  --shadow-overlay: 0 4px 16px rgb(32 51 52 / 0.12);
+
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--color-text);
+    background: var(--color-background);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    min-height: 100vh;
+    line-height: 1.45;
+  }
+  h1, h2, h3 {
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  table, .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+}

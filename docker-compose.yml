@@ -1,0 +1,88 @@
+# Local development stack. Not a production deployment.
+#   Web app:        http://localhost:3000
+#   API docs:       http://localhost:8000/docs
+#   Keycloak:       http://localhost:8080   (admin console: admin / KEYCLOAK_ADMIN_PASSWORD)
+#   Mail catcher:   http://localhost:8025   (verification emails land here)
+#
+# Redis, the Celery worker and object storage are added when the first module
+# that needs them is built (notifications / document uploads).
+
+name: clinicflow
+
+services:
+  postgres:
+    image: postgres:16.6
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      CLINICFLOW_OWNER_PASSWORD: ${CLINICFLOW_OWNER_PASSWORD:?set in .env}
+      CLINICFLOW_APP_PASSWORD: ${CLINICFLOW_APP_PASSWORD:?set in .env}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "127.0.0.1:8025:8025"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+    volumes:
+      - ./infra/keycloak/clinicflow-realm.json:/opt/keycloak/data/import/clinicflow-realm.json:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    build: ./backend
+    environment:
+      CLINICFLOW_ENVIRONMENT: development
+      CLINICFLOW_DATABASE_URL: postgresql+psycopg://clinicflow_app:${CLINICFLOW_APP_PASSWORD}@postgres:5432/clinicflow
+      CLINICFLOW_MIGRATION_DATABASE_URL: postgresql+psycopg://clinicflow_owner:${CLINICFLOW_OWNER_PASSWORD}@postgres:5432/clinicflow
+      # Tokens are issued for the browser-facing hostname; keys are fetched over the internal network.
+      CLINICFLOW_OIDC_ISSUER: http://localhost:8080/realms/clinicflow
+      CLINICFLOW_OIDC_JWKS_URL: http://keycloak:8080/realms/clinicflow/protocol/openid-connect/certs
+      CLINICFLOW_OIDC_AUDIENCE: clinicflow-api
+      CLINICFLOW_CORS_ORIGINS: '["http://localhost:3000"]'
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      CLINICFLOW_API_URL: http://backend:8000
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?set in .env}
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/clinicflow
+      KEYCLOAK_INTERNAL_ISSUER: http://keycloak:8080/realms/clinicflow
+      KEYCLOAK_CLIENT_ID: clinicflow-web
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - backend
+      - keycloak
+
+volumes:
+  postgres-data:

@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 **ClinicFlow — Healthcare, organised.** A multi-tenant Healthcare Practice Management System (HPMS) for independent practitioners, private practices and multi-branch clinics. Initial market: Swakopmund and Walvis Bay (Erongo Region, Namibia), then nationwide. Currency: Namibian Dollar (NAD). Responsive web app (desktop + mobile).
 
-> The repository is at the start of development. Follow the architecture and conventions below when scaffolding. If something here conflicts with code that already exists, ask before diverging.
+> **Status:** Phase 1 (platform foundation) is built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
 >
 > **Full specification:** [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) — the complete product requirements, per-module features, full table/column definitions, commercial model and roadmap. Read the relevant section before implementing a module or designing its tables.
 
@@ -79,6 +79,25 @@ frontend/
 ```
 
 Dev environment (Docker Compose): frontend, backend, PostgreSQL, Redis, worker, object storage, reverse proxy.
+
+---
+
+## Implementation conventions (established in Phase 1)
+
+**Backend**
+- Tenant-scoped endpoints depend on `require("perm.code")` (or `require(..., org_wide=True)`) from `app/core/tenancy.py`. It resolves the `X-Organisation-Id` header, checks active membership, and scopes the DB session. For a specific branch's resource, also check `ctx.has_in_branch(...)` and `raise deny(ctx, ...)`.
+- Look resources up by id through the scoped session (`db.get(Model, id)` → 404). RLS makes another tenant's id indistinguishable from a missing one.
+- Handlers that write **call `db.commit()` explicitly** before returning, and record audit events in the same transaction with `ctx.audit(db, "resource.action", "resource", id, details=...)`.
+- Every new tenant table needs, in its migration: `organisation_id`, `ENABLE` + `FORCE ROW LEVEL SECURITY`, a `tenant_isolation` policy (`organisation_id = app_current_org()`), grants to the app role, and composite FKs `(organisation_id, x_id)` for same-tenant references. Copy the pattern in `migrations/versions/*_0001_*`.
+- The app connects as `clinicflow_app`; migrations run as `clinicflow_owner`. Neither is a superuser. Never use a superuser at runtime.
+- Avoid `RETURNING` on inserts into tables whose SELECT policy may not match the new row (set defaults client-side, as `audit_logs.timestamp` does).
+- New permission codes go in `app/core/permissions.py` (and role templates); `python -m app.cli sync-permissions` upserts them on deploy.
+- Tests use real PostgreSQL (`backend/tests/conftest.py`). Every feature gets cross-tenant and permission-denial tests.
+
+**Frontend**
+- Server components and server actions call the API through `api()` in `lib/api.ts`. Tokens never reach the browser; don't add client-side API calls with tokens.
+- Mutations are server actions wrapped in `attempt()` (`lib/actions.ts`), returning `FormState` for `useActionState` forms.
+- UI primitives live in `components/ui/`; merge classes with `cn()` from `lib/cn.ts`. Gate UI with `hasPermission` / `hasOrgWide`, but the API is the authority.
 
 ---
 
