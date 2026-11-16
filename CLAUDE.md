@@ -143,23 +143,15 @@ The core EMR must stay specialty-agnostic. General practice, dental (tooth chart
 
 ## UI / design system
 
-Professional healthcare software — not a generic CRM or decorative AI dashboard. Light theme default, restrained colour, no unnecessary gradients, compact information-dense desktop tables, clear status indicators, avoid excessive cards.
+**Read [`docs/DESIGN.md`](docs/DESIGN.md) before any UI work and run its review checklist before finishing.** It overrides blueprint §9. Key rules:
 
-Define as CSS variables / Tailwind tokens:
-
-| Token | Colour |
-|---|---|
-| primary | `#126B67` (deep medical teal) |
-| secondary | `#527F9B` (muted blue) |
-| success | `#26856B` |
-| warning | `#D69A38` |
-| danger | `#C64E4E` |
-| background | `#F5F8F8` |
-| surface | `#FFFFFF` |
-| text | `#203334` |
-| text-muted | `#687C7D` |
-
-Fonts: **Manrope** (headings), **Inter** (body), **IBM Plex Mono** (data, references, IDs, amounts).
+- **Fonts:** IBM Plex Sans (UI, body, headings) + IBM Plex Mono (IDs, amounts, codes, times). **Never** Inter, Manrope, Poppins, Plus Jakarta Sans, DM Sans, Geist, Outfit, Sora, Space Grotesk, Montserrat, Nunito or Roboto. Tabular numerals for all numbers.
+- **Colour:** tokens only (primary teal `#126B67`, background `#F5F8F8`, surface `#FFFFFF`, text `#203334`). No Tailwind default palette classes, no raw hex in components. Use `-text` token variants for coloured text; the base warning, success, danger and secondary colours fail AA as text. No gradients, no purple, indigo or violet, no glass, blur or glow. Status is never shown by colour alone. Light theme only.
+- **Icons:** Lucide only, stroke 1.5, 16px or 20px, only where they aid scanning. No `Sparkles`, `Rocket` or `Zap`, no emoji, no icons in tinted circles.
+- **No generic-AI patterns:** no KPI-card grids with fake trends, no "Welcome back 👋" headers, no `rounded-2xl` shadowed cards everywhere (radius 6px, flat 1px borders), no marketing copy in the app, no decorative charts or animations, no unstyled stock shadcn.
+- **Density:** tables are the primary component (36–40px rows, sticky headers, monospace right-aligned amounts). 14px base on staff screens, 16px on the patient portal.
+- **Clinical safety UI:** a pinned patient identity banner (name, DOB and age, patient number) with an allergy indicator on every clinical screen, never blank. Confirmations for irreversible actions name the patient or object.
+- **Formatting:** `N$1,250.00`, `16 Nov 2026`, 24-hour time, `Africa/Windhoek`, British English.
 
 ---
 

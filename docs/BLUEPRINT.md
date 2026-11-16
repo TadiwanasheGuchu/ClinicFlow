@@ -1468,6 +1468,8 @@ Do not make direct integration a dependency for the first release.
 
 # 9. User Interface and Design Direction
 
+> **Superseded for implementation by [`docs/DESIGN.md`](DESIGN.md).** In particular, typography changed from Manrope/Inter to IBM Plex Sans + IBM Plex Mono, and the palette gained AA-compliant text variants.
+
 ## Product identity
 
 **ClinicFlow — Healthcare, organised.**
