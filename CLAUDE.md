@@ -5,6 +5,8 @@ Guidance for Claude Code when working in this repository.
 **ClinicFlow — Healthcare, organised.** A multi-tenant Healthcare Practice Management System (HPMS) for independent practitioners, private practices and multi-branch clinics. Initial market: Swakopmund and Walvis Bay (Erongo Region, Namibia), then nationwide. Currency: Namibian Dollar (NAD). Responsive web app (desktop + mobile).
 
 > The repository is at the start of development. Follow the architecture and conventions below when scaffolding. If something here conflicts with code that already exists, ask before diverging.
+>
+> **Full specification:** [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) — the complete product requirements, per-module features, full table/column definitions, commercial model and roadmap. Read the relevant section before implementing a module or designing its tables.
 
 ---
 
@@ -92,7 +94,7 @@ Dev environment (Docker Compose): frontend, backend, PostgreSQL, Redis, worker, 
 - No overlapping provider appointments — enforce at DB level (e.g. exclusion constraint on `tstzrange(start_at, end_at)` for active statuses), with an audited authorised-override path. Must hold under concurrent booking requests.
 - No negative stock unless explicitly authorised.
 
-**Core table groups** (see the product blueprint for full columns):
+**Core table groups** (full columns in `docs/BLUEPRINT.md` §6):
 - Access: `organisations`, `branches`, `users`, `organisation_memberships`, `roles`, `permissions`, `role_permissions`, `staff_profiles`
 - Patients: `patients`, `patient_contacts`, `patient_guardians`, `patient_consents`, `medical_aid_memberships`
 - Scheduling: `providers`, `specialties`, `provider_availability`, `provider_unavailability`, `appointment_types`, `appointments`, `appointment_events`, `clinic_rooms`, `queue_entries`
