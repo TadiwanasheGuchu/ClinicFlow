@@ -6,9 +6,12 @@ class AppError(Exception):
     status_code = 400
     code = "bad_request"
 
-    def __init__(self, message: str, *, code: str | None = None) -> None:
+    def __init__(
+        self, message: str, *, code: str | None = None, details: dict | None = None
+    ) -> None:
         super().__init__(message)
         self.message = message
+        self.details = details
         if code:
             self.code = code
 
@@ -44,6 +47,12 @@ def register_exception_handlers(app: FastAPI) -> None:
         headers = {"WWW-Authenticate": "Bearer"} if exc.status_code == 401 else None
         return JSONResponse(
             status_code=exc.status_code,
-            content={"error": {"code": exc.code, "message": exc.message}},
+            content={
+                "error": {
+                    "code": exc.code,
+                    "message": exc.message,
+                    **({"details": exc.details} if exc.details else {}),
+                }
+            },
             headers=headers,
         )

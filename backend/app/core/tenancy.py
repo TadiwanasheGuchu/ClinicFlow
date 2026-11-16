@@ -19,7 +19,7 @@ from app.core import audit
 from app.core.config import get_settings
 from app.core.db import get_db, set_scope
 from app.core.exceptions import AppError, Forbidden
-from app.core.permissions import OWNER_ROLE_KEY, PRIVILEGED_PERMISSIONS
+from app.core.permissions import CLINICAL_PERMISSIONS, OWNER_ROLE_KEY, PRIVILEGED_PERMISSIONS
 from app.core.security import CurrentUser, CurrentUserDep
 from app.modules.members.models import Membership, MembershipRole
 from app.modules.organisations.models import Organisation
@@ -148,6 +148,10 @@ def get_tenant(
         .where(MembershipRole.membership_id == membership.id)
     ).all()
     grants = frozenset(Grant(code, branch_id) for code, branch_id, _ in rows if code)
+    if any(g.permission in CLINICAL_PERMISSIONS for g in grants) and not _clinically_cleared(
+        db, membership, organisation
+    ):
+        grants = frozenset(g for g in grants if g.permission not in CLINICAL_PERMISSIONS)
     role_keys = frozenset(key for _, branch_id, key in rows if key and branch_id is None)
 
     return TenantContext(
@@ -157,6 +161,13 @@ def get_tenant(
         grants=grants,
         role_keys=role_keys,
     )
+
+
+def _clinically_cleared(db: Session, membership: Membership, organisation: Organisation) -> bool:
+    """Clinical permissions apply only with verified, unexpired professional registration."""
+    from app.modules.staff.service import get_profile, is_cleared
+
+    return is_cleared(get_profile(db, membership.id), organisation.timezone)
 
 
 TenantDep = Annotated[TenantContext, Depends(get_tenant)]

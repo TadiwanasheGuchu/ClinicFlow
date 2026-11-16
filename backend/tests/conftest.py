@@ -211,3 +211,107 @@ def add_member(new_actor):  # type: ignore[no-untyped-def]
         return member
 
     return factory
+
+
+# --- Phase 2 helpers ---------------------------------------------------------------
+
+TZ = "Africa/Windhoek"
+
+
+def local_time(days_ahead: int, hhmm: str) -> str:
+    """ISO timestamp for a local wall-clock time `days_ahead` days from today."""
+    from datetime import date, datetime, time
+    from zoneinfo import ZoneInfo
+
+    day = date.today() + timedelta(days=days_ahead)
+    hour, minute = map(int, hhmm.split(":"))
+    return datetime.combine(day, time(hour, minute), tzinfo=ZoneInfo(TZ)).isoformat()
+
+
+def make_patient(
+    actor: Actor, first: str = "Ndapandula", last: str | None = None, **extra: Any
+) -> dict:
+    payload = {
+        "first_name": first,
+        "last_name": last or f"Test{uuid.uuid4().hex[:6]}",
+        "date_of_birth": "1990-04-12",
+        "confirm_not_duplicate": True,
+        **extra,
+    }
+    response = actor.post("/api/v1/patients", json=payload)
+    assert response.status_code == 201, response.text
+    return response.json()
+
+
+def verify_practitioner(owner: Actor, member: Actor, *, expiry: str = "2099-12-31") -> None:
+    profile = owner.put(
+        f"/api/v1/members/{member.membership_id}/profile",
+        json={
+            "profession": "medical_practitioner",
+            "specialty": "General practice",
+            "registration_body": "HPCNA",
+            "professional_number": f"MP{uuid.uuid4().hex[:6]}",
+            "licence_expiry_date": expiry,
+        },
+    )
+    assert profile.status_code == 200, profile.text
+    verified = owner.post(
+        f"/api/v1/members/{member.membership_id}/profile/verify",
+        json={"decision": "verified", "note": "Checked HPCNA register"},
+    )
+    assert verified.status_code == 200, verified.text
+
+
+@pytest.fixture
+def clinic(owner, add_member):  # type: ignore[no-untyped-def]
+    """An organisation with a verified practitioner working 08:00-17:00 every day at the
+    main branch, a 30-minute consultation type (10-minute buffer) and a receptionist."""
+    branch = main_branch_id(owner)
+    doctor = add_member(owner, "practitioner")
+    verify_practitioner(owner, doctor)
+    provider = owner.post("/api/v1/providers", json={"membership_id": doctor.membership_id})
+    assert provider.status_code == 201, provider.text
+    provider_id = provider.json()["id"]
+    windows = [
+        {"branch_id": branch, "weekday": d, "start_time": "08:00", "end_time": "17:00"}
+        for d in range(7)
+    ]
+    assert (
+        owner.put(
+            f"/api/v1/providers/{provider_id}/availability", json={"windows": windows}
+        ).status_code
+        == 200
+    )
+    appointment_type = owner.post(
+        "/api/v1/appointment-types",
+        json={
+            "name": "Consultation",
+            "duration_minutes": 30,
+            "fee": "450.00",
+            "booking_buffer_minutes": 10,
+        },
+    )
+    assert appointment_type.status_code == 201, appointment_type.text
+    receptionist = add_member(owner, "receptionist")
+    return {
+        "owner": owner,
+        "doctor": doctor,
+        "receptionist": receptionist,
+        "branch_id": branch,
+        "provider_id": provider_id,
+        "type_id": appointment_type.json()["id"],
+    }
+
+
+def book(actor: Actor, clinic: dict, patient_id: str, start: str, **extra: Any):  # type: ignore[no-untyped-def]
+    return actor.post(
+        "/api/v1/appointments",
+        json={
+            "patient_id": patient_id,
+            "provider_id": clinic["provider_id"],
+            "branch_id": clinic["branch_id"],
+            "appointment_type_id": clinic["type_id"],
+            "start_at": start,
+            **extra,
+        },
+    )

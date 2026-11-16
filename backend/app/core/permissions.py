@@ -27,11 +27,20 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     PermissionDef("roles.read", "View roles and their permissions"),
     PermissionDef("roles.manage", "Create and edit roles", True),
     PermissionDef("audit.read", "View the audit log", True),
-    # Enforced from later phases; defined now so role templates are complete.
+    # Phase 2 (patients and scheduling) and later phases.
     PermissionDef("patients.read", "View patient demographic records"),
     PermissionDef("patients.write", "Register and edit patients"),
     PermissionDef("appointments.read", "View appointments and calendars"),
     PermissionDef("appointments.manage", "Book, reschedule and cancel appointments"),
+    PermissionDef(
+        "appointments.override",
+        "Override scheduling rules (double-booking, outside availability)",
+        True,
+    ),
+    PermissionDef(
+        "scheduling.manage", "Manage appointment types, practitioners and their availability"
+    ),
+    PermissionDef("credentials.verify", "Verify staff professional registration", True),
     PermissionDef("clinical.read", "View clinical records"),
     PermissionDef("clinical.write", "Write clinical notes and observations"),
     PermissionDef("clinical.sign", "Sign clinical records"),
@@ -49,7 +58,12 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
 PERMISSION_CODES: frozenset[str] = frozenset(p.code for p in PERMISSIONS)
 PRIVILEGED_PERMISSIONS: frozenset[str] = frozenset(p.code for p in PERMISSIONS if p.privileged)
 
-_CLINICAL = {"clinical.read", "clinical.write", "clinical.sign", "prescriptions.issue"}
+# Clinical permissions take effect only for staff whose professional registration is
+# verified and current (see app.core.tenancy); holding the role alone is not enough.
+CLINICAL_PERMISSIONS: frozenset[str] = frozenset(
+    {"clinical.read", "clinical.write", "clinical.sign", "prescriptions.issue"}
+)
+_CLINICAL = CLINICAL_PERMISSIONS
 
 
 @dataclass(frozen=True)
@@ -88,6 +102,8 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "appointments.read",
                 "billing.read",
                 "reports.operational",
+                "scheduling.manage",
+                "credentials.verify",
             }
         ),
     ),
@@ -102,8 +118,11 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "branches.manage",
                 "members.read",
                 "patients.read",
+                "patients.write",
                 "appointments.read",
                 "appointments.manage",
+                "appointments.override",
+                "scheduling.manage",
                 "reports.operational",
             }
         ),
@@ -151,6 +170,7 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "patients.read",
                 "patients.write",
                 "appointments.read",
+                "appointments.manage",
                 "clinical.read",
                 "clinical.write",
                 "clinical.sign",

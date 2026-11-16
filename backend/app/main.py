@@ -4,12 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.request_context import RequestContextMiddleware
+from app.modules.appointments.router import router as appointments_router
 from app.modules.audit.router import router as audit_router
 from app.modules.branches.router import router as branches_router
 from app.modules.members.router import router as members_router
 from app.modules.organisations.router import router as organisations_router
+from app.modules.patients.router import router as patients_router
 from app.modules.platform.router import router as platform_router
 from app.modules.roles.router import router as roles_router
+from app.modules.scheduling.router import router as scheduling_router
+from app.modules.staff.router import router as staff_router
 from app.modules.users.router import router as me_router
 
 
@@ -40,6 +44,10 @@ def create_app() -> FastAPI:
         branches_router,
         roles_router,
         members_router,
+        staff_router,
+        patients_router,
+        scheduling_router,
+        appointments_router,
         audit_router,
         platform_router,
     ):
