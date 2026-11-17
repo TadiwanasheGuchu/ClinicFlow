@@ -1,10 +1,10 @@
 """Patient message templates.
 
 Only the fields in ``MessageFields`` can appear in a message: practice and branch
-names, date and time, the booking reference, a phone number and a portal link. Appointment type, practitioner,
-notes and anything clinical are deliberately not available to templates (rule 7): an
-appointment type such as "HIV counselling" or a specialist's name can itself disclose
-health information to whoever sees the phone.
+names, date and time, the booking reference, a phone number and a portal link.
+Appointment type, practitioner, notes and anything clinical are deliberately not
+available to templates (rule 7): an appointment type such as "HIV counselling" or a
+specialist's name can itself disclose health information to whoever sees the phone.
 """
 
 from dataclasses import dataclass
