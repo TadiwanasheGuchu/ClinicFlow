@@ -155,6 +155,7 @@ export function AppointmentTypeForm({ action, item }: { action: Action; item?: A
           <Input id={id("fee")} name="fee" inputMode="decimal" pattern="^\d+(\.\d{1,2})?$" required defaultValue={item?.fee ?? "0.00"} className="w-28 text-right font-mono" />
         </Field>
         {item && <Checkbox name="is_active" defaultChecked={item.is_active} label="Offered" className="pb-2" />}
+        <Checkbox name="online_bookable" defaultChecked={item?.online_bookable ?? false} label="Bookable online" className="pb-2" />
         <SubmitButton>{item ? "Save" : "Add type"}</SubmitButton>
       </div>
     </ActionForm>

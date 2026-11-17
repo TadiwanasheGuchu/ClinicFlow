@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 **ClinicFlow — Healthcare, organised.** A multi-tenant Healthcare Practice Management System (HPMS) for independent practitioners, private practices and multi-branch clinics. Initial market: Swakopmund and Walvis Bay (Erongo Region, Namibia), then nationwide. Currency: Namibian Dollar (NAD). Responsive web app (desktop + mobile).
 
-> **Status:** Phases 1 (platform foundation) and 2 (patients and scheduling) are built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
+> **Status:** Phases 1–3 (platform foundation; patients and scheduling; patient portal and notifications) are built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
 >
 > **Full specification:** [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) — the complete product requirements, per-module features, full table/column definitions, commercial model and roadmap. Read the relevant section before implementing a module or designing its tables.
 
@@ -94,6 +94,9 @@ Dev environment (Docker Compose): frontend, backend, PostgreSQL, Redis, worker, 
 - New permission codes go in `app/core/permissions.py` (and role templates); `python -m app.cli sync-permissions` upserts them on deploy.
 - Booking rules live in `app/modules/scheduling/service.py`; the DB exclusion constraints on `appointments` are the final guard against double-booking. Map `ExclusionViolation` to 409 `slot_taken`.
 - Clinical permissions are filtered out in `get_tenant` unless the member's staff profile is verified and the licence current (rule 12) — don't bypass this when adding clinical endpoints.
+- Patient portal endpoints use `PortalContext` (`app/modules/portal/context.py`), not `require()`. Patients are not members: always filter patient data by `ctx.patient.id` (`own_appointment`), and reuse the booking engine (`appointments.service.book/move/withdraw`) rather than writing new rules.
+- Patient messages go through `notifications.service` (outbox + `python -m app.worker`). Templates may only use `MessageFields`; never add appointment type, practitioner, notes or anything clinical (rule 7). No SMS/WhatsApp provider is integrated yet — add one as an adapter in `notifications/adapters.py`.
+- Standalone entry points (CLI, worker) must `import app.models` so every table is registered.
 - Tests use real PostgreSQL (`backend/tests/conftest.py`). Every feature gets cross-tenant and permission-denial tests.
 
 **Frontend**

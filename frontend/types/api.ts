@@ -31,6 +31,14 @@ export type OrganisationSettings = {
   invoice_number_prefix: string;
   default_appointment_minutes: number;
   booking_buffer_minutes: number;
+  portal_enabled: boolean;
+  online_auto_confirm: boolean;
+  online_min_notice_hours: number;
+  online_max_days_ahead: number;
+  online_cancel_cutoff_hours: number;
+  online_max_upcoming: number;
+  reminder_hours_before: number;
+  reminders_enabled: boolean;
 };
 
 export type Organisation = {
@@ -44,6 +52,7 @@ export type Organisation = {
   timezone: string;
   status: string;
   settings: OrganisationSettings;
+  slug: string | null;
   created_at: string;
 };
 
@@ -186,6 +195,7 @@ export type AppointmentType = {
   fee: string;
   booking_buffer_minutes: number;
   is_active: boolean;
+  online_bookable: boolean;
 };
 
 export type Slot = { start_at: string; end_at: string };
@@ -231,3 +241,24 @@ export type AppointmentEvent = {
 };
 
 export type AppointmentDetail = Appointment & { events: AppointmentEvent[] };
+
+export type NotificationStatus = "pending" | "sent" | "failed" | "cancelled" | "skipped";
+
+export type Notification = {
+  id: string;
+  patient_id: string | null;
+  appointment_id: string | null;
+  event_type: string;
+  channel: string;
+  recipient: string | null;
+  body: string;
+  delivery_status: NotificationStatus;
+  scheduled_for: string;
+  attempts: number;
+  next_attempt_at: string | null;
+  last_error: string | null;
+  sent_at: string | null;
+  created_at: string;
+};
+
+export type PortalAccountStatus = { linked: boolean; linked_via: string | null; linked_at: string | null; email: string | null };

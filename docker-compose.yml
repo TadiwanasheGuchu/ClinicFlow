@@ -4,8 +4,9 @@
 #   Keycloak:       http://localhost:8080   (admin console: admin / KEYCLOAK_ADMIN_PASSWORD)
 #   Mail catcher:   http://localhost:8025   (verification emails land here)
 #
-# Redis, the Celery worker and object storage are added when the first module
-# that needs them is built (notifications / document uploads).
+# Patient messages use a Postgres outbox drained by the `worker` service.
+# Redis/Celery and object storage are added when a module needs them (document uploads,
+# heavy reports).
 
 name: clinicflow
 
@@ -63,11 +64,29 @@ services:
       CLINICFLOW_OIDC_JWKS_URL: http://keycloak:8080/realms/clinicflow/protocol/openid-connect/certs
       CLINICFLOW_OIDC_AUDIENCE: clinicflow-api
       CLINICFLOW_CORS_ORIGINS: '["http://localhost:3000"]'
+      CLINICFLOW_PUBLIC_WEB_URL: http://localhost:3000
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+
+  # Delivers queued patient messages (confirmations, reminders) with retries.
+  worker:
+    build: ./backend
+    entrypoint: []
+    command: ["python", "-m", "app.worker"]
+    environment:
+      CLINICFLOW_ENVIRONMENT: development
+      CLINICFLOW_DATABASE_URL: postgresql+psycopg://clinicflow_app:${CLINICFLOW_APP_PASSWORD}@postgres:5432/clinicflow
+      # Development: SMS/WhatsApp are simulated; email goes to Mailpit.
+      CLINICFLOW_SMS_PROVIDER: log
+      CLINICFLOW_WHATSAPP_PROVIDER: log
+      CLINICFLOW_EMAIL_PROVIDER: smtp
+      CLINICFLOW_SMTP_HOST: mailpit
+      CLINICFLOW_SMTP_PORT: "1025"
+    depends_on:
+      - backend
 
   frontend:
     build: ./frontend

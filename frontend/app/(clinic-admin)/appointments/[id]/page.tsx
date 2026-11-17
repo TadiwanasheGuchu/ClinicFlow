@@ -8,12 +8,13 @@ import { Details, Notice, PageHeader, Panel } from "@/components/ui/layout";
 import { PatientIdentityBanner } from "@/components/patients/identity-banner";
 import { cancelAppointment, rescheduleAppointment, setAppointmentStatus } from "@/features/appointments/actions";
 import { CancelForm, RescheduleForm } from "@/features/appointments/manage";
+import { MessagesTable } from "@/features/messages/messages-table";
 import { ACTION_LABEL, CANCELLABLE, NEXT_STATUSES, RESCHEDULABLE, STATUS_LABEL, VIOLATION_LABEL } from "@/lib/appointments";
 import { api, ApiError } from "@/lib/api";
 import { formatDateTime, humanise } from "@/lib/format";
 import { requirePermission } from "@/lib/session";
 import { dateOf, longDate, timeOf, todayISO } from "@/lib/time";
-import type { AppointmentDetail, AppointmentEvent, AppointmentStatus as S } from "@/types/api";
+import type { AppointmentDetail, AppointmentEvent, AppointmentStatus as S, Notification, Page } from "@/types/api";
 
 export const metadata: Metadata = { title: "Appointment" };
 
@@ -42,6 +43,7 @@ export default async function AppointmentPage({ params, searchParams }: { params
     if (error instanceof ApiError && [403, 404, 422].includes(error.status)) notFound();
     throw error;
   }
+  const messages = await api<Page<Notification>>("/notifications", { query: { appointment_id: appt.id, limit: 50 } });
   const inBranch = (perm: string) => access.grants.some((g) => g.permission === perm && (g.branch_id === null || g.branch_id === appt.branch.id));
   const canManage = inBranch("appointments.manage");
   const canComplete = inBranch("clinical.write");
@@ -102,6 +104,14 @@ export default async function AppointmentPage({ params, searchParams }: { params
             </div>
           </Panel>
         )}
+
+        <Panel title="Messages to the patient" description="Only the practice, branch, date, time and reference are ever included.">
+          {messages.items.length ? (
+            <MessagesTable items={messages.items} canRetry={canManage} returnTo={`/appointments/${appt.id}`} />
+          ) : (
+            <p className="text-text-muted">No messages for this appointment.</p>
+          )}
+        </Panel>
 
         <Panel title="History">
           <ol className="flex flex-col gap-2">

@@ -93,6 +93,7 @@ const typeBody = (form: FormData) => ({
   duration_minutes: Number(required(form, "duration_minutes")),
   fee: required(form, "fee"),
   booking_buffer_minutes: Number(optional(form, "booking_buffer_minutes") ?? 0),
+  online_bookable: form.get("online_bookable") === "on",
 });
 
 export async function createAppointmentType(_: FormState, form: FormData): Promise<FormState> {

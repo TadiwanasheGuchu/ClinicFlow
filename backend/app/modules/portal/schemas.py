@@ -127,6 +127,9 @@ class PortalAppointment(Schema):
     status: str
     start_at: datetime
     end_at: datetime
+    provider_id: uuid.UUID
+    branch_id: uuid.UUID
+    appointment_type_id: uuid.UUID
     provider_name: str
     branch_name: str
     branch_address: str | None

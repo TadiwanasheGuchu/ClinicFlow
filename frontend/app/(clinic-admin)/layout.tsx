@@ -11,6 +11,7 @@ export default async function ClinicAdminLayout({ children }: { children: React.
     can("appointments.read") && { href: "/today", label: "Today", icon: "today" },
     can("appointments.read") && { href: "/calendar", label: "Calendar", icon: "calendar" },
     can("patients.read") && { href: "/patients", label: "Patients", icon: "patients" },
+    can("appointments.read") && { href: "/messages", label: "Messages", icon: "messages" },
     can("appointments.read") && { href: "/practitioners", label: "Practitioners", icon: "practitioners", section: "Practice setup" },
     can("appointments.read") && { href: "/appointment-types", label: "Appointment types", icon: "types", section: "Practice setup" },
     can("branches.read") && { href: "/branches", label: "Branches", icon: "branches", section: "Practice setup" },

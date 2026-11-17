@@ -2,14 +2,14 @@
 
 import { useActionState } from "react";
 
-import { describedBy, Field, Input } from "@/components/ui/field";
+import { Checkbox, describedBy, Field, Input } from "@/components/ui/field";
 import { ActionForm, FormMessage, SubmitButton } from "@/components/ui/form";
 import { initialFormState } from "@/lib/form";
 import type { Organisation } from "@/types/api";
 
 import { updateOrganisation } from "./actions";
 
-export function OrganisationForm({ organisation }: { organisation: Organisation }) {
+export function OrganisationForm({ organisation, publicUrl }: { organisation: Organisation; publicUrl: string }) {
   const [state, action, pending] = useActionState(updateOrganisation, initialFormState);
   const err = (k: string) => state.fieldErrors?.[k];
   const s = organisation.settings;
@@ -53,6 +53,23 @@ export function OrganisationForm({ organisation }: { organisation: Organisation 
         {input("settings.invoice_number_prefix", "Invoice number prefix", s.invoice_number_prefix, { required: true, mono: true, hint: "1–5 capital letters." })}
         {input("settings.default_appointment_minutes", "Default appointment length (minutes)", s.default_appointment_minutes, { required: true, type: "number", min: 5, max: 240 })}
         {input("settings.booking_buffer_minutes", "Buffer between bookings (minutes)", s.booking_buffer_minutes, { required: true, type: "number", min: 0, max: 120 })}
+      </fieldset>
+      <fieldset className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-medium text-text">Patient portal and online booking</legend>
+        <Checkbox name="settings.portal_enabled" defaultChecked={s.portal_enabled} label="Patients can book online" description="Only practitioners and appointment types marked for online booking are offered." className="sm:col-span-2" />
+        <Field id="slug" label="Portal address" required hint={`${publicUrl}/book/${organisation.slug ?? "…"}`} error={err("slug")}>
+          <Input id="slug" name="slug" required defaultValue={organisation.slug ?? ""} pattern="[a-z0-9][a-z0-9\-]{1,58}[a-z0-9]" className="font-mono" aria-describedby={describedBy("slug", err("slug"), "x")} />
+        </Field>
+        <Checkbox name="settings.online_auto_confirm" defaultChecked={s.online_auto_confirm} label="Confirm online bookings automatically" description="Otherwise they arrive as requests for reception to confirm." className="pt-6" />
+        {input("settings.online_min_notice_hours", "Minimum notice (hours)", s.online_min_notice_hours, { required: true, type: "number", min: 0, max: 168 })}
+        {input("settings.online_max_days_ahead", "Bookable up to (days ahead)", s.online_max_days_ahead, { required: true, type: "number", min: 1, max: 365 })}
+        {input("settings.online_cancel_cutoff_hours", "Online changes close (hours before)", s.online_cancel_cutoff_hours, { required: true, type: "number", min: 0, max: 168 })}
+        {input("settings.online_max_upcoming", "Most upcoming online bookings per patient", s.online_max_upcoming, { required: true, type: "number", min: 1, max: 20 })}
+      </fieldset>
+      <fieldset className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-medium text-text">Reminders</legend>
+        <Checkbox name="settings.reminders_enabled" defaultChecked={s.reminders_enabled} label="Send appointment reminders" description="Messages contain only the practice, branch, date, time and reference — never clinical details." className="sm:col-span-2" />
+        {input("settings.reminder_hours_before", "Send reminder (hours before)", s.reminder_hours_before, { required: true, type: "number", min: 1, max: 168 })}
       </fieldset>
       <div>
         <SubmitButton>Save organisation</SubmitButton>

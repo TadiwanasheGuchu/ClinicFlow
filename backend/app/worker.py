@@ -8,6 +8,7 @@ import argparse
 import logging
 import time
 
+import app.models  # noqa: F401  (register every model so foreign keys resolve)
 from app.modules.notifications.service import dispatch_due
 
 logger = logging.getLogger("clinicflow.worker")

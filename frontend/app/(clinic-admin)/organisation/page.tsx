@@ -31,7 +31,7 @@ export default async function OrganisationPage() {
         </Panel>
         <Panel>
           {canManage ? (
-            <OrganisationForm organisation={org} />
+            <OrganisationForm organisation={org} publicUrl={process.env.NEXTAUTH_URL ?? "http://localhost:3000"} />
           ) : (
             <Details
               items={[

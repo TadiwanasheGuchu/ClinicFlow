@@ -7,12 +7,15 @@ import { ButtonLink } from "@/components/ui/button";
 import { Details, EmptyState, PageHeader, Panel } from "@/components/ui/layout";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { PatientIdentityBanner } from "@/components/patients/identity-banner";
+import { createLinkCode, revokePortalAccess } from "@/features/messages/actions";
+import { LinkCodeButton } from "@/features/messages/link-code";
 import { updatePatient } from "@/features/patients/actions";
+import { Button } from "@/components/ui/button";
 import { PatientForm } from "@/features/patients/patient-form";
 import { api, ApiError } from "@/lib/api";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { hasPermission, requirePermission } from "@/lib/session";
-import type { Appointment, Page, Patient } from "@/types/api";
+import type { Appointment, Page, Patient, PortalAccountStatus } from "@/types/api";
 
 export const metadata: Metadata = { title: "Patient" };
 
@@ -38,6 +41,7 @@ export default async function PatientPage({ params, searchParams }: { params: Pr
   const upcoming = appointments?.items.filter((a) => new Date(a.end_at).getTime() >= now).sort((a, b) => a.start_at.localeCompare(b.start_at)) ?? [];
   const past = appointments?.items.filter((a) => new Date(a.end_at).getTime() < now).sort((a, b) => b.start_at.localeCompare(a.start_at)) ?? [];
   const name = `${patient.first_name} ${patient.last_name}`;
+  const online = await api<PortalAccountStatus>(`/patients/${patient.id}/portal-account`);
 
   const list = (items: Appointment[]) => (
     <Table>
@@ -93,6 +97,25 @@ export default async function PatientPage({ params, searchParams }: { params: Pr
             />
           </Panel>
         )}
+        <Panel title="Online access" description="Lets the patient book and manage appointments in the patient portal.">
+          {online.linked ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-base">Connected to <span className="font-medium">{online.email}</span> since {formatDate(online.linked_at)} ({online.linked_via === "code" ? "link code" : "self-registration"}).</p>
+              {canWrite && (
+                <form action={revokePortalAccess.bind(null, patient.id)}>
+                  <Button type="submit" variant="secondary">Turn off online access for {name}</Button>
+                </form>
+              )}
+            </div>
+          ) : canWrite ? (
+            <>
+              <p className="mb-3 text-base text-text-muted">Not connected. Create a one-time code (valid 7 days) for the patient to enter online with their date of birth.</p>
+              <LinkCodeButton action={createLinkCode.bind(null, patient.id)} />
+            </>
+          ) : (
+            <p className="text-text-muted">Not connected.</p>
+          )}
+        </Panel>
         {appointments && (
           <>
             <section>

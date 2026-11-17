@@ -48,8 +48,10 @@ export function SubmitButton({
   variant = "primary",
   name,
   value,
+  className,
 }: {
   children: React.ReactNode;
+  className?: string;
   pendingLabel?: string;
   variant?: "primary" | "danger" | "secondary";
   name?: string;
@@ -59,7 +61,7 @@ export function SubmitButton({
   const { pending: formPending } = useFormStatus();
   const pending = contextPending ?? formPending;
   return (
-    <Button type="submit" variant={variant} disabled={pending} aria-disabled={pending} name={name} value={value}>
+    <Button type="submit" variant={variant} disabled={pending} aria-disabled={pending} name={name} value={value} className={className}>
       {pending ? pendingLabel : children}
     </Button>
   );

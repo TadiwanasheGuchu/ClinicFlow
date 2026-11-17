@@ -4,7 +4,7 @@ Healthcare practice management for independent practitioners, private practices 
 multi-branch clinics in Namibia. See [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) for the product
 specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
 
-**Status:** Phases 1 and 2 are built.
+**Status:** Phases 1–3 are built.
 
 - **Platform foundation:** multi-tenancy, authentication, branches, staff, roles and
   permissions, audit log.
@@ -12,6 +12,11 @@ specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
   registration verification, working hours and leave, appointment types, a booking engine
   that prevents double-booking at the database level, a Today reception list, and a day
   calendar.
+
+- **Patient portal and notifications:** per-practice online booking at `/book/<slug>`
+  (self-registration or link codes from reception), confirmations and reminders through a
+  retrying outbox worker. SMS/WhatsApp delivery is simulated until a provider is contracted;
+  email works over SMTP.
 
 No clinical records yet (Phase 4).
 
