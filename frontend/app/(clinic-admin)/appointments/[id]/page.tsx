@@ -8,6 +8,7 @@ import { Details, Notice, PageHeader, Panel } from "@/components/ui/layout";
 import { PatientIdentityBanner } from "@/components/patients/identity-banner";
 import { cancelAppointment, rescheduleAppointment, setAppointmentStatus } from "@/features/appointments/actions";
 import { startConsultation } from "@/features/clinical/actions";
+import { invoiceForAppointment } from "@/features/billing/actions";
 import { CancelForm, RescheduleForm } from "@/features/appointments/manage";
 import { MessagesTable } from "@/features/messages/messages-table";
 import { ACTION_LABEL, CANCELLABLE, NEXT_STATUSES, RESCHEDULABLE, STATUS_LABEL, VIOLATION_LABEL } from "@/lib/appointments";
@@ -57,6 +58,7 @@ export default async function AppointmentPage({ params, searchParams }: { params
       api<AllergySummary>(`/patients/${appt.patient.id}/allergies`),
     ]);
   }
+  const canInvoice = inBranch("billing.manage") && ["checked_in", "waiting", "in_consultation", "completed"].includes(appt.status);
   const canStart = canComplete && ["checked_in", "waiting", "in_consultation"].includes(appt.status) && !encounter;
   const started = new Date(appt.start_at).getTime() <= Date.now();
   const nextStatuses = NEXT_STATUSES[appt.status].filter((s) => (s !== "completed" || canComplete) && (s !== "no_show" || started));
@@ -84,6 +86,11 @@ export default async function AppointmentPage({ params, searchParams }: { params
               <Link href={`/consultations/${encounter.id}`} className="inline-flex h-7 items-center rounded bg-primary px-2.5 text-sm font-medium text-white hover:bg-primary-hover">
                 {encounter.status === "open" ? "Open consultation" : "View consultation"}
               </Link>
+            )}
+            {canInvoice && (
+              <form action={invoiceForAppointment.bind(null, appt.patient.id, appt.id)}>
+                <Button type="submit" size="sm" variant="secondary">Invoice</Button>
+              </form>
             )}
             {canStart && (
               <form action={startConsultation.bind(null, appt.patient.id, appt.id)}>

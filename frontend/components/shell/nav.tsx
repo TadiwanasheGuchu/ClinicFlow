@@ -2,7 +2,12 @@
 
 import { cn } from "@/lib/cn";
 import {
+  Banknote,
   Building2,
+  FileText,
+  HandCoins,
+  Receipt,
+  Tags,
   CalendarDays,
   ClipboardList,
   Contact,
@@ -22,6 +27,11 @@ const ICONS = {
   today: ClipboardList,
   calendar: CalendarDays,
   patients: Contact,
+  invoices: Receipt,
+  claims: FileText,
+  cashup: Banknote,
+  services: Tags,
+  funds: HandCoins,
   messages: MessageSquare,
   practitioners: Stethoscope,
   types: ListChecks,

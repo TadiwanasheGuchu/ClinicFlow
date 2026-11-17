@@ -39,6 +39,10 @@ export type OrganisationSettings = {
   online_max_upcoming: number;
   reminder_hours_before: number;
   reminders_enabled: boolean;
+  vat_registered: boolean;
+  vat_rate: string;
+  vat_number: string | null;
+  invoice_due_days: number;
 };
 
 export type Organisation = {
@@ -325,3 +329,29 @@ export type ClinicalSummary = {
   recent_prescriptions: Prescription[];
   encounters: Encounter[];
 };
+
+// --- Billing and medical aid (Phase 5) ---
+export type Service = { id: string; code: string; tariff_code: string | null; name: string; description: string | null; unit_price: string; tax_category: "standard" | "zero" | "exempt"; is_active: boolean };
+export type InvoiceItem = { position: number; service_id: string | null; code: string | null; tariff_code: string | null; description: string; quantity: string; unit_price: string; tax_rate: string; line_subtotal: string; tax_amount: string; line_total: string };
+export type BillingPayment = { id: string; invoice_id: string; receipt_number: string; amount: string; method: string; reference: string | null; status: "completed" | "reversed"; received_at: string; received_by: string; claim_id: string | null; reversed_at: string | null; reversal_reason: string | null };
+export type CreditNote = { id: string; credit_note_number: string; amount: string; reason: string; issued_at: string; issued_by: string };
+export type Refund = { id: string; refund_number: string; amount: string; method: string; reference: string | null; reason: string; refunded_at: string; refunded_by: string };
+export type InvoiceStatus = "draft" | "issued" | "partially_paid" | "paid" | "credited";
+export type InvoiceSummary = { id: string; invoice_number: string | null; status: InvoiceStatus; patient_id: string; patient_name: string; patient_number: string; branch_id: string; appointment_id: string | null; total: string; amount_due: string; issued_at: string | null; due_at: string | null; created_at: string };
+export type Invoice = InvoiceSummary & {
+  subtotal: string; tax_amount: string; amount_paid: string; amount_credited: string; amount_refunded: string; credit_balance: string; notes: string | null;
+  items: InvoiceItem[]; payments: BillingPayment[]; credit_notes: CreditNote[]; refunds: Refund[];
+  claims: { id: string; claim_number: string; status: string; claimed_amount: string; approved_amount: string | null; paid_amount: string }[];
+};
+export type StatementLine = { date: string; kind: string; reference: string; description: string; debit: string; credit: string; balance: string };
+export type Statement = { patient_id: string; lines: StatementLine[]; balance: string };
+export type CashUp = { date: string; branch_id: string | null; by_method: { method: string; count: number; received: string; refunded: string; net: string }[]; total_received: string; total_refunded: string; net: string; reversed_payments: BillingPayment[]; payments: BillingPayment[] };
+export type Fund = { id: string; name: string; administrator: string | null; phone: string | null; email: string | null; claims_address: string | null; notes: string | null; is_active: boolean };
+export type AidMembership = { id: string; patient_id: string; fund_id: string; fund_name: string; plan_name: string | null; membership_number: string; dependant_code: string | null; principal_member_name: string | null; principal_member_id_number: string | null; effective_from: string | null; effective_until: string | null; is_active: boolean; verification_status: string; verified_at: string | null };
+export type ClaimStatus = "draft" | "ready" | "submitted" | "processing" | "accepted" | "rejected" | "partially_paid" | "paid" | "resubmission_required" | "cancelled";
+export type Claim = {
+  id: string; claim_number: string; status: ClaimStatus; invoice_id: string; invoice_number: string | null; patient_id: string; patient_name: string; fund_id: string; fund_name: string;
+  membership_snapshot: Record<string, string | null>; diagnosis_codes: string[]; claimed_amount: string; approved_amount: string | null; paid_amount: string; patient_portion: string;
+  fund_reference: string | null; submission_method: string | null; submitted_at: string | null; response_at: string | null; rejection_reason: string | null; created_at: string;
+};
+export type ClaimDetail = Claim & { events: { id: string; event_type: string; previous_status: string | null; new_status: string | null; message: string | null; details: Record<string, unknown>; actor_user_id: string; created_at: string }[] };

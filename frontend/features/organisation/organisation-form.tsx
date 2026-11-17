@@ -67,6 +67,13 @@ export function OrganisationForm({ organisation, publicUrl }: { organisation: Or
         {input("settings.online_max_upcoming", "Most upcoming online bookings per patient", s.online_max_upcoming, { required: true, type: "number", min: 1, max: 20 })}
       </fieldset>
       <fieldset className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-medium text-text">Billing</legend>
+        <Checkbox name="settings.vat_registered" defaultChecked={s.vat_registered} label="Practice is VAT-registered" description="Confirm with your accountant which services are VAT-exempt; set each service’s VAT category." className="sm:col-span-2" />
+        {input("settings.vat_rate", "VAT rate (%)", s.vat_rate, { required: true, mono: true })}
+        {input("settings.vat_number", "VAT number", s.vat_number, { mono: true })}
+        {input("settings.invoice_due_days", "Invoices due after (days)", s.invoice_due_days, { required: true, type: "number", min: 0, max: 365 })}
+      </fieldset>
+      <fieldset className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
         <legend className="mb-2 text-sm font-medium text-text">Reminders</legend>
         <Checkbox name="settings.reminders_enabled" defaultChecked={s.reminders_enabled} label="Send appointment reminders" description="Messages contain only the practice, branch, date, time and reference — never clinical details." className="sm:col-span-2" />
         {input("settings.reminder_hours_before", "Send reminder (hours before)", s.reminder_hours_before, { required: true, type: "number", min: 1, max: 168 })}
