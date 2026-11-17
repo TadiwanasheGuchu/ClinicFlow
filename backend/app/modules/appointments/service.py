@@ -12,6 +12,7 @@ from app.core.tenancy import TenantContext, deny
 from app.modules.appointments.models import Appointment, AppointmentEvent
 from app.modules.appointments.schemas import AppointmentRead, PatientRef, Ref, TypeRef
 from app.modules.branches.models import Branch
+from app.modules.notifications import service as notifications
 from app.modules.patients.models import Patient
 from app.modules.scheduling import service as scheduling
 from app.modules.scheduling.models import AppointmentType, Provider
@@ -154,7 +155,15 @@ def _flush_booking(db: Session) -> None:
 
 
 def create(db: Session, ctx: TenantContext, data: Any) -> Appointment:
+    """Staff booking."""
     require_branch_permission(ctx, "appointments.manage", data.branch_id)
+    walk_in = data.booking_source == "walk_in"
+    return book(db, ctx, data, status="checked_in" if walk_in else "confirmed", allow_past=walk_in)
+
+
+def book(db: Session, ctx: Any, data: Any, *, status: str, allow_past: bool) -> Appointment:
+    """Create an appointment after validating every scheduling rule. ``ctx`` is the staff
+    TenantContext or the patient PortalContext; callers check who may book."""
     provider, _branch = _validate_parties(db, ctx, data.provider_id, data.branch_id)
     patient = db.get(Patient, data.patient_id)
     if patient is None:
@@ -165,7 +174,6 @@ def create(db: Session, ctx: TenantContext, data: Any) -> Appointment:
     if not appointment_type.is_active:
         raise ValidationFailed("This appointment type is no longer offered.")
 
-    walk_in = data.booking_source == "walk_in"
     start = data.start_at.astimezone(UTC)
     end, blocked_until, violations = _check_rules(
         db,
@@ -175,8 +183,8 @@ def create(db: Session, ctx: TenantContext, data: Any) -> Appointment:
         patient_id=patient.id,
         start=start,
         appointment_type=appointment_type,
-        override_reason=data.override_reason,
-        allow_past=walk_in,
+        override_reason=getattr(data, "override_reason", None),
+        allow_past=allow_past,
     )
     appointment = Appointment(
         organisation_id=ctx.organisation_id,
@@ -188,9 +196,9 @@ def create(db: Session, ctx: TenantContext, data: Any) -> Appointment:
         start_at=start,
         end_at=end,
         blocked_until=blocked_until,
-        status="checked_in" if walk_in else "confirmed",
+        status=status,
         booking_source=data.booking_source,
-        booking_note=data.booking_note,
+        booking_note=getattr(data, "booking_note", None),
         is_override=bool(violations),
         created_by=ctx.user_id,
     )
@@ -212,19 +220,30 @@ def create(db: Session, ctx: TenantContext, data: Any) -> Appointment:
             ),
         },
     )
+    notifications.on_appointment_event(
+        db, ctx.organisation, appointment, "created", actor_user_id=ctx.user_id
+    )
     return appointment
 
 
 def reschedule(db: Session, ctx: TenantContext, appointment: Appointment, data: Any) -> None:
     require_branch_permission(ctx, "appointments.manage", appointment.branch_id)
+    branch_id = data.branch_id or appointment.branch_id
+    if branch_id != appointment.branch_id:
+        require_branch_permission(ctx, "appointments.manage", branch_id)
+    move(db, ctx, appointment, data)
+
+
+def move(db: Session, ctx: Any, appointment: Appointment, data: Any) -> None:
+    """Reschedule after validating rules; callers check who may do it."""
     if appointment.status not in RESCHEDULABLE:
         raise Conflict(
             f"A {appointment.status.replace('_', ' ')} appointment cannot be rescheduled."
         )
-    branch_id = data.branch_id or appointment.branch_id
-    if branch_id != appointment.branch_id:
-        require_branch_permission(ctx, "appointments.manage", branch_id)
-    provider, _ = _validate_parties(db, ctx, data.provider_id or appointment.provider_id, branch_id)
+    branch_id = getattr(data, "branch_id", None) or appointment.branch_id
+    provider_id = getattr(data, "provider_id", None) or appointment.provider_id
+    override_reason = getattr(data, "override_reason", None)
+    provider, _ = _validate_parties(db, ctx, provider_id, branch_id)
     appointment_type = db.get_one(AppointmentType, appointment.appointment_type_id)
     start = data.start_at.astimezone(UTC)
     end, blocked_until, violations = _check_rules(
@@ -235,7 +254,7 @@ def reschedule(db: Session, ctx: TenantContext, appointment: Appointment, data: 
         patient_id=appointment.patient_id,
         start=start,
         appointment_type=appointment_type,
-        override_reason=data.override_reason,
+        override_reason=override_reason,
         allow_past=False,
         exclude_appointment_id=appointment.id,
     )
@@ -263,22 +282,33 @@ def reschedule(db: Session, ctx: TenantContext, appointment: Appointment, data: 
                 "branch_id": str(branch_id),
             },
             **(
-                {"override": {"violations": violations, "reason": data.override_reason}}
+                {"override": {"violations": violations, "reason": override_reason}}
                 if violations
                 else {}
             ),
         },
     )
+    notifications.on_appointment_event(
+        db, ctx.organisation, appointment, "rescheduled", actor_user_id=ctx.user_id
+    )
 
 
 def cancel(db: Session, ctx: TenantContext, appointment: Appointment, reason: str) -> None:
     require_branch_permission(ctx, "appointments.manage", appointment.branch_id)
+    withdraw(db, ctx, appointment, reason)
+
+
+def withdraw(db: Session, ctx: Any, appointment: Appointment, reason: str) -> None:
+    """Cancel; callers check who may do it."""
     if appointment.status not in CANCELLABLE:
         raise Conflict(f"A {appointment.status.replace('_', ' ')} appointment cannot be cancelled.")
     previous = appointment.status
     appointment.status = "cancelled"
     appointment.cancellation_reason = reason
     record_event(db, ctx, appointment, "cancelled", previous_status=previous, reason=reason)
+    notifications.on_appointment_event(
+        db, ctx.organisation, appointment, "cancelled", actor_user_id=ctx.user_id
+    )
 
 
 def change_status(
@@ -301,6 +331,10 @@ def change_status(
     previous = appointment.status
     appointment.status = new_status
     record_event(db, ctx, appointment, "status_changed", previous_status=previous, reason=reason)
+    if new_status in ("confirmed", "checked_in", "no_show"):
+        notifications.on_appointment_event(
+            db, ctx.organisation, appointment, new_status, actor_user_id=ctx.user_id
+        )
 
 
 def to_reads(db: Session, appointments: list[Appointment]) -> list[AppointmentRead]:

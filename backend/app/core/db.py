@@ -19,6 +19,7 @@ from app.core.config import get_settings
 SCOPE_ORGANISATION = "organisation_id"
 SCOPE_USER = "user_id"
 SCOPE_PLATFORM = "platform_scope"
+SCOPE_WORKER = "worker_scope"
 
 
 class Base(DeclarativeBase):
@@ -49,7 +50,7 @@ def get_sessionmaker() -> sessionmaker[Session]:
 
 
 def _apply_scope(session: Session, connection) -> None:  # type: ignore[no-untyped-def]
-    for key in (SCOPE_ORGANISATION, SCOPE_USER, SCOPE_PLATFORM):
+    for key in (SCOPE_ORGANISATION, SCOPE_USER, SCOPE_PLATFORM, SCOPE_WORKER):
         value = session.info.get(key)
         connection.execute(
             text("SELECT set_config(:name, :value, true)"),
@@ -68,11 +69,13 @@ def set_scope(
     organisation_id: uuid.UUID | None = None,
     user_id: uuid.UUID | None = None,
     platform: bool = False,
+    worker: bool = False,
 ) -> None:
     """Set the tenant scope for this session and apply it to the open transaction."""
     session.info[SCOPE_ORGANISATION] = organisation_id
     session.info[SCOPE_USER] = user_id
     session.info[SCOPE_PLATFORM] = "on" if platform else None
+    session.info[SCOPE_WORKER] = "on" if worker else None
     if session.in_transaction():
         _apply_scope(session, session.connection())
 

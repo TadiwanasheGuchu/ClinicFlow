@@ -12,6 +12,7 @@ from app.modules.branches.models import Branch
 from app.modules.members.models import Membership, MembershipRole
 from app.modules.organisations.models import Organisation
 from app.modules.organisations.schemas import OrganisationCreate, OrganisationSettings
+from app.modules.portal import slugs
 from app.modules.roles.models import Permission, Role, RolePermission
 
 
@@ -37,6 +38,7 @@ def register_organisation(
     )
     db.add(organisation)
     db.flush()
+    slugs.assign_unique(db, organisation_id, data.name)
 
     permission_ids = dict(db.execute(select(Permission.code, Permission.id)).all())
     roles: dict[str, Role] = {}

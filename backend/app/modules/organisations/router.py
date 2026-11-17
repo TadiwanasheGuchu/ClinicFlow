@@ -13,6 +13,7 @@ from app.modules.organisations.schemas import (
     OrganisationUpdate,
 )
 from app.modules.organisations.service import register_organisation
+from app.modules.portal import slugs
 
 router = APIRouter(tags=["organisations"])
 DB = Annotated[Session, Depends(get_db)]
@@ -23,14 +24,14 @@ def create_organisation(data: OrganisationCreate, current: CurrentUserDep, db: D
     """Register a new practice. The caller becomes its Owner."""
     organisation = register_organisation(db, current, data)
     db.commit()
-    return organisation
+    return _read(db, organisation)
 
 
 @router.get("/organisation", response_model=OrganisationRead)
 def get_organisation(
-    ctx: Annotated[TenantContext, Depends(require("organisation.read"))],
+    ctx: Annotated[TenantContext, Depends(require("organisation.read"))], db: DB
 ) -> object:
-    return ctx.organisation
+    return _read(db, ctx.organisation)
 
 
 @router.patch("/organisation", response_model=OrganisationRead)
@@ -40,7 +41,18 @@ def update_organisation(
     db: DB,
 ) -> object:
     organisation = ctx.organisation
-    changes = data.model_dump(exclude_unset=True, exclude={"settings"})
+    changes = data.model_dump(exclude_unset=True, exclude={"settings", "slug"})
+    if data.slug is not None:
+        before_slug = slugs.slug_of(db, organisation.id)
+        slugs.change(db, organisation.id, data.slug)
+        if before_slug != data.slug:
+            ctx.audit(
+                db,
+                "organisation.portal_address_changed",
+                "organisation",
+                organisation.id,
+                details={"from": before_slug, "to": data.slug},
+            )
     before = {key: getattr(organisation, key) for key in changes}
     for key, value in changes.items():
         setattr(organisation, key, value)
@@ -60,4 +72,10 @@ def update_organisation(
         details={"before": before, "after": changes},
     )
     db.commit()
-    return organisation
+    return _read(db, organisation)
+
+
+def _read(db: Session, organisation: object) -> OrganisationRead:
+    read = OrganisationRead.model_validate(organisation)
+    read.slug = slugs.slug_of(db, read.id)
+    return read

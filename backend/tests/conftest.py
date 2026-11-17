@@ -315,3 +315,59 @@ def book(actor: Actor, clinic: dict, patient_id: str, start: str, **extra: Any):
             **extra,
         },
     )
+
+
+# --- Phase 3 helpers ---------------------------------------------------------------
+
+
+@pytest.fixture
+def portal(clinic):  # type: ignore[no-untyped-def]
+    """`clinic` with the patient portal enabled and its practitioner and type bookable online."""
+    owner = clinic["owner"]
+    assert (
+        owner.patch("/api/v1/organisation", json={"settings": {"portal_enabled": True}}).status_code
+        == 200
+    )
+    assert (
+        owner.patch(
+            f"/api/v1/providers/{clinic['provider_id']}", json={"online_booking_enabled": True}
+        ).status_code
+        == 200
+    )
+    assert (
+        owner.patch(
+            f"/api/v1/appointment-types/{clinic['type_id']}", json={"online_bookable": True}
+        ).status_code
+        == 200
+    )
+    slug = owner.get("/api/v1/organisation").json()["slug"]
+    return {**clinic, "slug": slug, "base": f"/api/v1/portal/{slug}"}
+
+
+@pytest.fixture
+def patient_user(new_actor, portal):  # type: ignore[no-untyped-def]
+    """A signed-in patient who self-registered with the portal practice."""
+    actor: Actor = new_actor("Portal Patient")
+    response = actor.post(
+        f"{portal['base']}/register",
+        json={
+            "first_name": "Selma",
+            "last_name": f"Portal{uuid.uuid4().hex[:6]}",
+            "date_of_birth": "1992-07-01",
+            "phone": "+264 81 765 4321",
+        },
+    )
+    assert response.status_code == 201, response.text
+    return actor
+
+
+def portal_book(actor: Actor, portal: dict, start: str):  # type: ignore[no-untyped-def]
+    return actor.post(
+        f"{portal['base']}/appointments",
+        json={
+            "provider_id": portal["provider_id"],
+            "branch_id": portal["branch_id"],
+            "appointment_type_id": portal["type_id"],
+            "start_at": start,
+        },
+    )

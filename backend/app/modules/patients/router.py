@@ -6,10 +6,15 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
+from app.core.exceptions import Conflict
 from app.core.tenancy import TenantContext, require
 from app.modules.patients import service
 from app.modules.patients.models import Patient
 from app.modules.patients.schemas import PatientCreate, PatientRead, PatientSummary, PatientUpdate
+from app.modules.portal import service as portal_service
+from app.modules.portal.models import PatientAccount
+from app.modules.portal.schemas import LinkCode, PortalAccountStatus
+from app.modules.users.models import User
 from app.shared.schemas import Page, PageParams
 
 router = APIRouter(prefix="/patients", tags=["patients"])
@@ -78,3 +83,54 @@ def update_patient(patient_id: uuid.UUID, data: PatientUpdate, ctx: CanWrite, db
     ctx.audit(db, "patient.updated", "patient", patient.id, details={"fields": changed_fields})
     db.commit()
     return patient
+
+
+# --- Patient portal access ---------------------------------------------------------
+
+
+@router.get("/{patient_id}/portal-account", response_model=PortalAccountStatus)
+def portal_account(patient_id: uuid.UUID, ctx: CanRead, db: DB) -> object:
+    service.get_patient(db, patient_id)
+    account = db.scalar(select(PatientAccount).where(PatientAccount.patient_id == patient_id))
+    if account is None or account.status != "active":
+        return PortalAccountStatus(linked=False)
+    user = db.get(User, account.user_id)
+    return PortalAccountStatus(
+        linked=True,
+        linked_via=account.linked_via,
+        linked_at=account.created_at,
+        email=user.email if user else None,
+    )
+
+
+@router.post(
+    "/{patient_id}/portal-link-code", response_model=LinkCode, status_code=status.HTTP_201_CREATED
+)
+def portal_link_code(patient_id: uuid.UUID, ctx: CanWrite, db: DB) -> object:
+    """Issue a one-time code the patient enters online to connect their account.
+    Shown once; give it to the patient in person or by phone after confirming identity."""
+    patient = service.get_patient(db, patient_id)
+    code, expires_at = portal_service.new_link_code(
+        db, ctx.organisation_id, patient.id, ctx.user_id
+    )
+    ctx.audit(
+        db,
+        "portal.link_code_created",
+        "patient",
+        patient.id,
+        details={"expires_at": expires_at.isoformat()},
+    )
+    db.commit()
+    return LinkCode(code=code, expires_at=expires_at)
+
+
+@router.post("/{patient_id}/portal-account/revoke", response_model=PortalAccountStatus)
+def revoke_portal_account(patient_id: uuid.UUID, ctx: CanWrite, db: DB) -> object:
+    service.get_patient(db, patient_id)
+    account = db.scalar(select(PatientAccount).where(PatientAccount.patient_id == patient_id))
+    if account is None or account.status != "active":
+        raise Conflict("This patient has no online access to revoke.")
+    account.status = "revoked"
+    ctx.audit(db, "portal.account_revoked", "patient", patient_id)
+    db.commit()
+    return PortalAccountStatus(linked=False)

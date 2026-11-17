@@ -4,8 +4,10 @@ from app.modules.appointments.models import Appointment, AppointmentEvent
 from app.modules.audit.models import AuditLog
 from app.modules.branches.models import Branch
 from app.modules.members.models import Membership, MembershipRole
+from app.modules.notifications.models import Notification
 from app.modules.organisations.models import Organisation
 from app.modules.patients.models import Patient
+from app.modules.portal.models import OrganisationSlug, PatientAccount, PatientLinkCode
 from app.modules.roles.models import Permission, Role, RolePermission
 from app.modules.scheduling.models import (
     AppointmentType,
@@ -25,9 +27,13 @@ __all__ = [
     "Branch",
     "Membership",
     "MembershipRole",
+    "Notification",
     "Organisation",
     "OrganisationCounter",
+    "OrganisationSlug",
     "Patient",
+    "PatientAccount",
+    "PatientLinkCode",
     "Permission",
     "Provider",
     "ProviderAvailability",

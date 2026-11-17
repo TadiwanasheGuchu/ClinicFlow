@@ -120,6 +120,7 @@ class AppointmentTypeCreate(Schema):
     duration_minutes: int = Field(ge=5, le=480)
     fee: Decimal = Field(ge=0, max_digits=12, decimal_places=2)
     booking_buffer_minutes: int = Field(0, ge=0, le=120)
+    online_bookable: bool = False
 
 
 class AppointmentTypeUpdate(Schema):
@@ -129,6 +130,7 @@ class AppointmentTypeUpdate(Schema):
     fee: Decimal | None = Field(None, ge=0, max_digits=12, decimal_places=2)
     booking_buffer_minutes: int | None = Field(None, ge=0, le=120)
     is_active: bool | None = None
+    online_bookable: bool | None = None
 
     @model_validator(mode="after")
     def _not_null(self) -> "AppointmentTypeUpdate":
@@ -146,6 +148,7 @@ class AppointmentTypeRead(Schema):
     fee: Decimal
     booking_buffer_minutes: int
     is_active: bool
+    online_bookable: bool
 
 
 class Slot(Schema):

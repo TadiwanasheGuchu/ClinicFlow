@@ -111,3 +111,5 @@ class AppointmentType(UUIDPrimaryKey, Timestamps, Base):
     fee: Mapped[Decimal] = mapped_column(Numeric(12, 2), default=Decimal("0.00"))
     booking_buffer_minutes: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Offered to patients in the online portal.
+    online_bookable: Mapped[bool] = mapped_column(Boolean, default=False)
