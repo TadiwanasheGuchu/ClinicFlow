@@ -3,6 +3,7 @@
 import { cn } from "@/lib/cn";
 import {
   Banknote,
+  ChartColumn,
   Building2,
   FileText,
   HandCoins,
@@ -28,6 +29,7 @@ const ICONS = {
   calendar: CalendarDays,
   patients: Contact,
   invoices: Receipt,
+  reports: ChartColumn,
   claims: FileText,
   cashup: Banknote,
   services: Tags,

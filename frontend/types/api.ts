@@ -355,3 +355,22 @@ export type Claim = {
   fund_reference: string | null; submission_method: string | null; submitted_at: string | null; response_at: string | null; rejection_reason: string | null; created_at: string;
 };
 export type ClaimDetail = Claim & { events: { id: string; event_type: string; previous_status: string | null; new_status: string | null; message: string | null; details: Record<string, unknown>; actor_user_id: string; created_at: string }[] };
+
+// --- Reports (Phase 6) ---
+export type DayCounts = { date: string; booked: number; completed: number; cancelled: number; no_show: number; walk_in: number; online: number };
+export type OperationalReport = {
+  start: string; end: string; branch_id: string | null; totals: DayCounts;
+  cancellation_rate_percent: string | null; no_show_rate_percent: string | null;
+  average_wait_minutes: string | null; wait_sample: number; new_patients: number; consultations: number;
+  daily: DayCounts[];
+  by_provider: { provider_id: string; provider_name: string; booked: number; completed: number; no_show: number; booked_minutes: number; available_minutes: number; utilisation_percent: string | null }[];
+  by_branch: { branch_id: string; branch_name: string; booked: number; completed: number; cancelled: number; no_show: number }[];
+};
+export type MoneyByKey = { key: string; label: string; count: number; amount: string };
+export type FinancialReport = {
+  start: string; end: string; branch_id: string | null; invoiced: string; invoice_count: number; credited: string; collected: string; refunded: string; net_collected: string;
+  series: { period: string; invoiced: string; collected: string; refunded: string }[];
+  collected_by_method: MoneyByKey[]; revenue_by_service: MoneyByKey[]; revenue_by_provider: MoneyByKey[];
+  outstanding_total: string; aged_debt: { bucket: string; invoices: number; amount: string }[];
+  claims: { status: ClaimStatus; count: number; claimed: string; paid: string }[]; claims_outstanding: string; claim_rejection_rate_percent: string | null;
+};

@@ -1,6 +1,9 @@
 import "server-only";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+
+import { safePath } from "@/lib/safe-path";
 
 import { api, getActiveOrgId } from "@/lib/api";
 import type { Access, Me } from "@/types/api";
@@ -25,7 +28,12 @@ export async function requireWorkspace(): Promise<Workspace> {
   const current = active.find((m) => m.organisation_id === selected);
   if (!current) {
     // No valid selection (first visit, or access removed).
-    redirect(active.length ? `/switch?to=${active[0]!.organisation_id}` : "/onboarding");
+    const next = safePath((await headers()).get("x-pathname"), "/");
+    redirect(
+      active.length
+        ? `/switch?to=${active[0]!.organisation_id}&next=${encodeURIComponent(next)}`
+        : "/onboarding",
+    );
   }
   const access = await api<Access>("/me/access");
   return { me, orgId: current.organisation_id, orgName: current.organisation_name, access };

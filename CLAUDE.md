@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 **ClinicFlow — Healthcare, organised.** A multi-tenant Healthcare Practice Management System (HPMS) for independent practitioners, private practices and multi-branch clinics. Initial market: Swakopmund and Walvis Bay (Erongo Region, Namibia), then nationwide. Currency: Namibian Dollar (NAD). Responsive web app (desktop + mobile).
 
-> **Status:** Phases 1–5 (platform foundation; patients and scheduling; patient portal and notifications; clinical records; billing and medical aid) are built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
+> **Status:** Phases 1–5 (platform foundation; patients and scheduling; patient portal and notifications; clinical records; billing and medical aid) and the Phase 6 operational and financial reports are built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
 >
 > **Full specification:** [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) — the complete product requirements, per-module features, full table/column definitions, commercial model and roadmap. Read the relevant section before implementing a module or designing its tables.
 
@@ -99,12 +99,15 @@ Dev environment (Docker Compose): frontend, backend, PostgreSQL, Redis, worker, 
 - Clinical records (`app/modules/clinical/`): check `clinical.read/write/sign` / `prescriptions.issue` per branch with `service.require_in_branch`; audit every view with `service.log_view`; keep audit `details` to identifiers and types — never note text, diagnoses or medications (the audit log is readable without clinical access). Signed notes and issued prescriptions are trigger-protected: correct via amendments, status changes or cancellation, never UPDATE/DELETE.
 - Billing (`app/modules/billing/`): money is `Decimal`/`NUMERIC(12,2)` with half-up rounding per line; lock the invoice row (`get_invoice(..., lock=True)`) before any money operation; derive status from amounts (`derive_status`), never set it directly. Issued invoices, payments, credit notes, refunds and claim history are trigger-protected — corrections are credit notes, refunds or reversals. Claims carry ICD-10 codes only, never diagnosis text. Medical aid stays a manual workflow (no electronic submission/eligibility).
 - Standalone entry points (CLI, worker) must `import app.models` so every table is registered.
+- Every migration needs a working `downgrade()`; `tests/test_migrations.py` round-trips head → base → head.
+- Reports (`app/modules/reports/`) are read-only aggregates gated by `reports.operational` / `reports.financial`; they return identifiers and counts, never clinical text, and cap ranges at 366 days.
 - Tests use real PostgreSQL (`backend/tests/conftest.py`). Every feature gets cross-tenant and permission-denial tests.
 
 **Frontend**
 - Server components and server actions call the API through `api()` in `lib/api.ts`. Tokens never reach the browser; don't add client-side API calls with tokens.
 - Mutations are server actions wrapped in `attempt()` (`lib/actions.ts`), returning `FormState` for `useActionState` forms. Render forms with `<ActionForm action={formAction} pending={pending}>` (`components/ui/form.tsx`), not `<form action>`: React 19 resets uncontrolled forms after every action, which would wipe input on validation errors.
 - Clinical entry forms must not be resubmittable by accident: new-item forms clear after success (`useResetKey`) and new-note editors close once created (see `features/clinical/forms.tsx`).
+- `proxy.ts` passes the requested path as `x-pathname`; `requireWorkspace` uses it as the return path when it has to send the user through `/switch` to pick an organisation.
 - Times: scheduling uses the organisation timezone (`Africa/Windhoek`); use helpers in `lib/time.ts` (`dayRange`, `localISO`, `dateOf`, `timeOf`), never `iso.slice(0, 10)` for a local date.
 - UI primitives live in `components/ui/`; merge classes with `cn()` from `lib/cn.ts`. Gate UI with `hasPermission` / `hasOrgWide`, but the API is the authority.
 

@@ -4,7 +4,7 @@ Healthcare practice management for independent practitioners, private practices 
 multi-branch clinics in Namibia. See [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) for the product
 specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
 
-**Status:** Phases 1–5 are built.
+**Status:** Phases 1–5 are built, plus the Phase 6 reports.
 
 - **Platform foundation:** multi-tenancy, authentication, branches, staff, roles and
   permissions, audit log.
@@ -30,7 +30,12 @@ specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
   (no electronic submission) with remittances posted as payments. Issued financial records
   are immutable at the database level.
 
-Not yet: specialty modules, lab, inventory and reports (Phase 6); clinical document uploads
+- **Reports:** operational (appointments, cancellations, no-shows, waiting times, new
+  patients, consultations per practitioner) and financial (invoiced, collected by method,
+  refunds, revenue by service and practitioner, aged debt, medical aid claims) for any range up
+  to a year, by branch.
+
+Not yet: specialty modules, lab and inventory (Phase 6); clinical document uploads
 (needs object storage).
 
 ## Layout
