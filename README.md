@@ -4,7 +4,7 @@ Healthcare practice management for independent practitioners, private practices 
 multi-branch clinics in Namibia. See [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) for the product
 specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
 
-**Status:** Phases 1–3 are built.
+**Status:** Phases 1–4 are built.
 
 - **Platform foundation:** multi-tenancy, authentication, branches, staff, roles and
   permissions, audit log.
@@ -18,7 +18,13 @@ specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
   retrying outbox worker. SMS/WhatsApp delivery is simulated until a provider is contracted;
   email works over SMTP.
 
-No clinical records yet (Phase 4).
+- **Clinical records:** consultations linked to appointments; SOAP notes with
+  draft/sign/amend versions (signed notes are immutable at the database level); allergies
+  with an explicit "no known allergies" state in the patient banner; vital signs;
+  diagnoses (optional ICD-10 code); referrals; printable prescriptions with a basic allergy
+  name check. Every clinical view is audited.
+
+Not yet: billing and medical aid (Phase 5), clinical document uploads (needs object storage).
 
 ## Layout
 

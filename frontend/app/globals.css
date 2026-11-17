@@ -80,3 +80,10 @@
     }
   }
 }
+
+/* Printed documents (prescriptions): plain white page, no app background. */
+@media print {
+  html, body {
+    background: #ffffff;
+  }
+}

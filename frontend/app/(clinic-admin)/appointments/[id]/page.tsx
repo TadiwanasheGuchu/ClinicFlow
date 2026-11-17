@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Details, Notice, PageHeader, Panel } from "@/components/ui/layout";
 import { PatientIdentityBanner } from "@/components/patients/identity-banner";
 import { cancelAppointment, rescheduleAppointment, setAppointmentStatus } from "@/features/appointments/actions";
+import { startConsultation } from "@/features/clinical/actions";
 import { CancelForm, RescheduleForm } from "@/features/appointments/manage";
 import { MessagesTable } from "@/features/messages/messages-table";
 import { ACTION_LABEL, CANCELLABLE, NEXT_STATUSES, RESCHEDULABLE, STATUS_LABEL, VIOLATION_LABEL } from "@/lib/appointments";
@@ -14,7 +15,7 @@ import { api, ApiError } from "@/lib/api";
 import { formatDateTime, humanise } from "@/lib/format";
 import { requirePermission } from "@/lib/session";
 import { dateOf, longDate, timeOf, todayISO } from "@/lib/time";
-import type { AppointmentDetail, AppointmentEvent, AppointmentStatus as S, Notification, Page } from "@/types/api";
+import type { AllergySummary, AppointmentDetail, AppointmentEvent, AppointmentStatus as S, Encounter, Notification, Page } from "@/types/api";
 
 export const metadata: Metadata = { title: "Appointment" };
 
@@ -47,13 +48,23 @@ export default async function AppointmentPage({ params, searchParams }: { params
   const inBranch = (perm: string) => access.grants.some((g) => g.permission === perm && (g.branch_id === null || g.branch_id === appt.branch.id));
   const canManage = inBranch("appointments.manage");
   const canComplete = inBranch("clinical.write");
+  const canReadClinical = inBranch("clinical.read");
+  let encounter: Encounter | null = null;
+  let allergies: AllergySummary | undefined;
+  if (canReadClinical) {
+    [encounter, allergies] = await Promise.all([
+      api<Encounter>(`/appointments/${appt.id}/encounter`).catch((e) => { if (e instanceof ApiError && e.status === 404) return null; throw e; }),
+      api<AllergySummary>(`/patients/${appt.patient.id}/allergies`),
+    ]);
+  }
+  const canStart = canComplete && ["checked_in", "waiting", "in_consultation"].includes(appt.status) && !encounter;
   const started = new Date(appt.start_at).getTime() <= Date.now();
   const nextStatuses = NEXT_STATUSES[appt.status].filter((s) => (s !== "completed" || canComplete) && (s !== "no_show" || started));
   const override = appt.events.find((e) => e.details.override)?.details.override as { violations: string[]; reason: string } | undefined;
 
   return (
     <>
-      <PatientIdentityBanner patient={{ name: appt.patient.name, patient_number: appt.patient.patient_number, date_of_birth: appt.patient.date_of_birth }} />
+      <PatientIdentityBanner patient={{ name: appt.patient.name, patient_number: appt.patient.patient_number, date_of_birth: appt.patient.date_of_birth }} allergies={allergies} />
       <PageHeader
         title={`${appt.appointment_type.name} with ${appt.provider.name}`}
         description={`${longDate(dateOf(appt.start_at))}, ${timeOf(appt.start_at)}–${timeOf(appt.end_at)} · ${appt.branch.name}`}
@@ -69,7 +80,17 @@ export default async function AppointmentPage({ params, searchParams }: { params
         <Panel>
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <AppointmentStatus status={appt.status} className="text-base" />
-            {canManage && nextStatuses.map((s) => (
+            {encounter && (
+              <Link href={`/consultations/${encounter.id}`} className="inline-flex h-7 items-center rounded bg-primary px-2.5 text-sm font-medium text-white hover:bg-primary-hover">
+                {encounter.status === "open" ? "Open consultation" : "View consultation"}
+              </Link>
+            )}
+            {canStart && (
+              <form action={startConsultation.bind(null, appt.patient.id, appt.id)}>
+                <Button type="submit" size="sm">Start consultation</Button>
+              </form>
+            )}
+            {canManage && nextStatuses.filter((s) => !(s === "in_consultation" && canStart)).map((s) => (
               <form key={s} action={setAppointmentStatus.bind(null, appt.id, s, undefined)}>
                 <Button type="submit" size="sm" variant={s === "no_show" ? "secondary" : "primary"}>{ACTION_LABEL[s]}</Button>
               </form>

@@ -15,7 +15,7 @@ import { PatientForm } from "@/features/patients/patient-form";
 import { api, ApiError } from "@/lib/api";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { hasPermission, requirePermission } from "@/lib/session";
-import type { Appointment, Page, Patient, PortalAccountStatus } from "@/types/api";
+import type { AllergySummary, Appointment, Page, Patient, PortalAccountStatus } from "@/types/api";
 
 export const metadata: Metadata = { title: "Patient" };
 
@@ -42,6 +42,8 @@ export default async function PatientPage({ params, searchParams }: { params: Pr
   const past = appointments?.items.filter((a) => new Date(a.end_at).getTime() < now).sort((a, b) => b.start_at.localeCompare(a.start_at)) ?? [];
   const name = `${patient.first_name} ${patient.last_name}`;
   const online = await api<PortalAccountStatus>(`/patients/${patient.id}/portal-account`);
+  const clinical = hasPermission(access, "clinical.read");
+  const allergies = clinical ? await api<AllergySummary>(`/patients/${patient.id}/allergies`) : undefined;
 
   const list = (items: Appointment[]) => (
     <Table>
@@ -65,12 +67,13 @@ export default async function PatientPage({ params, searchParams }: { params: Pr
 
   return (
     <>
-      <PatientIdentityBanner patient={{ name, patient_number: patient.patient_number, date_of_birth: patient.date_of_birth, sex: patient.sex }} />
+      <PatientIdentityBanner patient={{ name, patient_number: patient.patient_number, date_of_birth: patient.date_of_birth, sex: patient.sex }} allergies={allergies} />
       <PageHeader
         title={name}
         back={{ href: "/patients", label: "Patients" }}
         actions={
           <>
+            {clinical && <ButtonLink href={`/patients/${patient.id}/clinical`} variant="secondary">Clinical record</ButtonLink>}
             {canWrite && !edit && <ButtonLink href={`/patients/${patient.id}?edit=1`} variant="secondary">Edit details</ButtonLink>}
             {canBook && patient.status === "active" && <ButtonLink href={`/appointments/new?patient=${patient.id}`}>Book appointment</ButtonLink>}
           </>

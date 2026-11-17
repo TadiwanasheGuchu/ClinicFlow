@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 **ClinicFlow — Healthcare, organised.** A multi-tenant Healthcare Practice Management System (HPMS) for independent practitioners, private practices and multi-branch clinics. Initial market: Swakopmund and Walvis Bay (Erongo Region, Namibia), then nationwide. Currency: Namibian Dollar (NAD). Responsive web app (desktop + mobile).
 
-> **Status:** Phases 1–3 (platform foundation; patients and scheduling; patient portal and notifications) are built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
+> **Status:** Phases 1–4 (platform foundation; patients and scheduling; patient portal and notifications; clinical records) are built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
 >
 > **Full specification:** [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) — the complete product requirements, per-module features, full table/column definitions, commercial model and roadmap. Read the relevant section before implementing a module or designing its tables.
 
@@ -96,12 +96,14 @@ Dev environment (Docker Compose): frontend, backend, PostgreSQL, Redis, worker, 
 - Clinical permissions are filtered out in `get_tenant` unless the member's staff profile is verified and the licence current (rule 12) — don't bypass this when adding clinical endpoints.
 - Patient portal endpoints use `PortalContext` (`app/modules/portal/context.py`), not `require()`. Patients are not members: always filter patient data by `ctx.patient.id` (`own_appointment`), and reuse the booking engine (`appointments.service.book/move/withdraw`) rather than writing new rules.
 - Patient messages go through `notifications.service` (outbox + `python -m app.worker`). Templates may only use `MessageFields`; never add appointment type, practitioner, notes or anything clinical (rule 7). No SMS/WhatsApp provider is integrated yet — add one as an adapter in `notifications/adapters.py`.
+- Clinical records (`app/modules/clinical/`): check `clinical.read/write/sign` / `prescriptions.issue` per branch with `service.require_in_branch`; audit every view with `service.log_view`; keep audit `details` to identifiers and types — never note text, diagnoses or medications (the audit log is readable without clinical access). Signed notes and issued prescriptions are trigger-protected: correct via amendments, status changes or cancellation, never UPDATE/DELETE.
 - Standalone entry points (CLI, worker) must `import app.models` so every table is registered.
 - Tests use real PostgreSQL (`backend/tests/conftest.py`). Every feature gets cross-tenant and permission-denial tests.
 
 **Frontend**
 - Server components and server actions call the API through `api()` in `lib/api.ts`. Tokens never reach the browser; don't add client-side API calls with tokens.
 - Mutations are server actions wrapped in `attempt()` (`lib/actions.ts`), returning `FormState` for `useActionState` forms. Render forms with `<ActionForm action={formAction} pending={pending}>` (`components/ui/form.tsx`), not `<form action>`: React 19 resets uncontrolled forms after every action, which would wipe input on validation errors.
+- Clinical entry forms must not be resubmittable by accident: new-item forms clear after success (`useResetKey`) and new-note editors close once created (see `features/clinical/forms.tsx`).
 - Times: scheduling uses the organisation timezone (`Africa/Windhoek`); use helpers in `lib/time.ts` (`dayRange`, `localISO`, `dateOf`, `timeOf`), never `iso.slice(0, 10)` for a local date.
 - UI primitives live in `components/ui/`; merge classes with `cn()` from `lib/cn.ts`. Gate UI with `hasPermission` / `hasOrgWide`, but the API is the authority.
 

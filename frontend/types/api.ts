@@ -262,3 +262,66 @@ export type Notification = {
 };
 
 export type PortalAccountStatus = { linked: boolean; linked_via: string | null; linked_at: string | null; email: string | null };
+
+// --- Clinical (Phase 4) ---
+export type Allergy = { id: string; substance: string; reaction: string | null; severity: string; status: string; status_reason: string | null; created_at: string };
+export type AllergySummary = { state: "has_allergies" | "no_known_allergies" | "not_recorded"; allergies: Allergy[]; assessed_at: string | null };
+
+export type ClinicalNote = {
+  id: string;
+  encounter_id: string;
+  note_group_id: string;
+  version_number: number;
+  status: "draft" | "signed" | "amended";
+  note_type: string;
+  content: Record<string, string>;
+  author_user_id: string;
+  author_name: string | null;
+  signed_at: string | null;
+  content_sha256: string | null;
+  amends_note_id: string | null;
+  amendment_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Observation = { id: string; encounter_id: string; observation_type: string; value: string; unit: string; measured_at: string; status: string; status_reason: string | null };
+export type Diagnosis = { id: string; encounter_id: string; code_system: string; code: string | null; description: string; clinical_status: string; status_reason: string | null; onset_date: string | null; created_at: string };
+export type Referral = { id: string; encounter_id: string; receiving_provider: string; receiving_specialty: string | null; urgency: string; reason: string; status: string; status_reason: string | null; referring_user_id: string; created_at: string };
+export type PrescriptionItem = { position: number; medication: string; strength: string | null; dosage_form: string | null; dose: string; frequency: string; route: string | null; duration: string | null; quantity: string | null; instructions: string | null };
+export type Prescription = {
+  id: string;
+  encounter_id: string;
+  patient_id: string;
+  prescription_number: string;
+  prescriber_name: string;
+  prescriber_registration: string;
+  status: "issued" | "cancelled";
+  issued_at: string;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
+  allergy_warning: { matches: { medication: string; allergy: string }[]; reason: string } | null;
+  items: PrescriptionItem[];
+};
+export type Encounter = {
+  id: string;
+  patient_id: string;
+  branch_id: string;
+  branch_name: string;
+  appointment_id: string | null;
+  encounter_type: string;
+  status: "open" | "closed";
+  clinician_user_id: string;
+  clinician_name: string;
+  started_at: string;
+  ended_at: string | null;
+};
+export type EncounterDetail = Encounter & { notes: ClinicalNote[]; observations: Observation[]; diagnoses: Diagnosis[]; prescriptions: Prescription[]; referrals: Referral[] };
+export type ClinicalSummary = {
+  patient_id: string;
+  allergies: AllergySummary;
+  active_diagnoses: Diagnosis[];
+  latest_observations: { observation_type: string; value: string; unit: string; measured_at: string }[];
+  recent_prescriptions: Prescription[];
+  encounters: Encounter[];
+};

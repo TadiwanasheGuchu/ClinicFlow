@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/field";
 import { EmptyState, PageHeader } from "@/components/ui/layout";
 import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { setAppointmentStatus } from "@/features/appointments/actions";
+import { startConsultation } from "@/features/clinical/actions";
 import { branchesFor } from "@/features/appointments/branch-choice";
 import { ACTION_LABEL, NEXT_STATUSES, STATUS_LABEL } from "@/lib/appointments";
 import { api } from "@/lib/api";
@@ -32,6 +33,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
   const items = page?.items ?? [];
   const count = (...s: S[]) => items.filter((a) => s.includes(a.status)).length;
   const canManage = hasPermission(access, "appointments.manage");
+  const canConsult = (branchId: string) => access.grants.some((g) => g.permission === "clinical.write" && (g.branch_id === null || g.branch_id === branchId));
   const here = `/today?branch=${selected?.id ?? ""}`;
 
   const summary: [string, number][] = [
@@ -78,7 +80,8 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
           </THead>
           <tbody>
             {items.map((a) => {
-              const next = NEXT_STATUSES[a.status].filter((s) => QUICK.includes(s));
+              const consult = canConsult(a.branch.id) && ["checked_in", "waiting", "in_consultation"].includes(a.status);
+              const next = NEXT_STATUSES[a.status].filter((s) => QUICK.includes(s) && !(consult && s === "in_consultation"));
               return (
                 <TR key={a.id} className={a.status === "cancelled" ? "text-text-muted" : undefined}>
                   <TD mono className="whitespace-nowrap">
@@ -93,6 +96,11 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                   <TD><AppointmentStatus status={a.status} /></TD>
                   {canManage && (
                     <TD align="right">
+                      {consult && (
+                        <form action={startConsultation.bind(null, a.patient.id, a.id)} className="inline">
+                          <Button type="submit" size="sm" aria-label={`${a.status === "in_consultation" ? "Open" : "Start"} consultation: ${a.patient.name}`}>{a.status === "in_consultation" ? "Open consultation" : "Start consultation"}</Button>
+                        </form>
+                      )}
                       {next.map((s) => (
                         <form key={s} action={setAppointmentStatus.bind(null, a.id, s, here)} className="inline">
                           <Button type="submit" size="sm" variant="secondary" aria-label={`${ACTION_LABEL[s]}: ${a.patient.name}, ${timeOf(a.start_at)}`}>{ACTION_LABEL[s]}</Button>
