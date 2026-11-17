@@ -2,6 +2,7 @@
 
 from app.modules.appointments.models import Appointment, AppointmentEvent
 from app.modules.audit.models import AuditLog
+from app.modules.billing.models import CreditNote, Invoice, InvoiceItem, Payment, Refund, Service
 from app.modules.branches.models import Branch
 from app.modules.clinical.models import (
     Allergy,
@@ -13,6 +14,12 @@ from app.modules.clinical.models import (
     Prescription,
     PrescriptionItem,
     Referral,
+)
+from app.modules.medical_aid.models import (
+    ClaimEvent,
+    MedicalAidClaim,
+    MedicalAidFund,
+    MedicalAidMembership,
 )
 from app.modules.members.models import Membership, MembershipRole
 from app.modules.notifications.models import Notification
@@ -38,9 +45,16 @@ __all__ = [
     "AppointmentType",
     "AuditLog",
     "Branch",
+    "ClaimEvent",
     "ClinicalNote",
+    "CreditNote",
     "Diagnosis",
     "Encounter",
+    "Invoice",
+    "InvoiceItem",
+    "MedicalAidClaim",
+    "MedicalAidFund",
+    "MedicalAidMembership",
     "Membership",
     "MembershipRole",
     "Notification",
@@ -51,6 +65,7 @@ __all__ = [
     "Patient",
     "PatientAccount",
     "PatientLinkCode",
+    "Payment",
     "Permission",
     "Prescription",
     "PrescriptionItem",
@@ -58,8 +73,10 @@ __all__ = [
     "ProviderAvailability",
     "ProviderUnavailability",
     "Referral",
+    "Refund",
     "Role",
     "RolePermission",
+    "Service",
     "StaffProfile",
     "User",
 ]

@@ -93,7 +93,7 @@ def test_admin_cannot_grant_permissions_they_lack(owner, add_member, new_actor):
     reception = role_id(owner, "receptionist")
     current = owner.get(f"/api/v1/roles/{reception}").json()["permissions"]
     response = admin.patch(
-        f"/api/v1/roles/{reception}", json={"permissions": [*current, "billing.manage"]}
+        f"/api/v1/roles/{reception}", json={"permissions": [*current, "billing.adjust"]}
     )
     assert response.status_code == 403
 

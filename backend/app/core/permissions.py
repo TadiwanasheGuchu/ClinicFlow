@@ -49,7 +49,8 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
         "Issue prescriptions (also requires verified professional registration)",
     ),
     PermissionDef("billing.read", "View invoices and payments"),
-    PermissionDef("billing.manage", "Create invoices, record payments and credit notes"),
+    PermissionDef("billing.manage", "Create and issue invoices and record payments"),
+    PermissionDef("billing.adjust", "Issue credit notes and refunds, and reverse payments", True),
     PermissionDef("medical_aid.manage", "Prepare and track medical aid claims"),
     PermissionDef("reports.operational", "View operational reports"),
     PermissionDef("reports.financial", "View financial reports"),
@@ -133,6 +134,7 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
         "Oversees practice performance and finances.",
         frozenset(
             {
+                "billing.adjust",
                 "organisation.read",
                 "branches.read",
                 "members.read",
@@ -149,6 +151,7 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
         "Registers patients, manages bookings and check-in.",
         frozenset(
             {
+                "billing.manage",
                 "organisation.read",
                 "branches.read",
                 "patients.read",
@@ -199,6 +202,7 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
         "Manages invoices, payments and medical aid claims.",
         frozenset(
             {
+                "billing.adjust",
                 "organisation.read",
                 "branches.read",
                 "patients.read",

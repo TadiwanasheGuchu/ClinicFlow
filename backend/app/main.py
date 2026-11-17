@@ -6,8 +6,10 @@ from app.core.exceptions import register_exception_handlers
 from app.core.request_context import RequestContextMiddleware
 from app.modules.appointments.router import router as appointments_router
 from app.modules.audit.router import router as audit_router
+from app.modules.billing.router import router as billing_router
 from app.modules.branches.router import router as branches_router
 from app.modules.clinical.router import router as clinical_router
+from app.modules.medical_aid.router import router as medical_aid_router
 from app.modules.members.router import router as members_router
 from app.modules.notifications.router import router as notifications_router
 from app.modules.organisations.router import router as organisations_router
@@ -52,6 +54,8 @@ def create_app() -> FastAPI:
         scheduling_router,
         appointments_router,
         clinical_router,
+        billing_router,
+        medical_aid_router,
         notifications_router,
         portal_router,
         audit_router,

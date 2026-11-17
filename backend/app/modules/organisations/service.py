@@ -33,7 +33,7 @@ def register_organisation(
         currency="NAD",
         timezone=data.timezone,
         status="active",
-        settings=OrganisationSettings().model_dump(),
+        settings=OrganisationSettings().model_dump(mode="json"),
         created_by=current.id,
     )
     db.add(organisation)

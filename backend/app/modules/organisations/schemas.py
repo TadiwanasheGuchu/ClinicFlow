@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from typing import Literal
 from zoneinfo import available_timezones
 
@@ -26,6 +27,12 @@ class OrganisationSettings(Schema):
     online_max_upcoming: int = Field(3, ge=1, le=20)
     reminder_hours_before: int = Field(24, ge=1, le=168)
     reminders_enabled: bool = True
+    # Billing (Phase 5). VAT treatment of medical services must be confirmed with the
+    # practice's accountant; the default is not VAT-registered.
+    vat_registered: bool = False
+    vat_rate: Decimal = Field(Decimal("15.00"), ge=0, le=100, max_digits=5, decimal_places=2)
+    vat_number: str | None = Field(None, max_length=30)
+    invoice_due_days: int = Field(30, ge=0, le=365)
 
 
 class OrganisationSettingsUpdate(Schema):
@@ -41,6 +48,10 @@ class OrganisationSettingsUpdate(Schema):
     online_max_upcoming: int | None = Field(None, ge=1, le=20)
     reminder_hours_before: int | None = Field(None, ge=1, le=168)
     reminders_enabled: bool | None = None
+    vat_registered: bool | None = None
+    vat_rate: Decimal | None = Field(None, ge=0, le=100, max_digits=5, decimal_places=2)
+    vat_number: str | None = Field(None, max_length=30)
+    invoice_due_days: int | None = Field(None, ge=0, le=365)
 
 
 class _OrganisationFields(Schema):

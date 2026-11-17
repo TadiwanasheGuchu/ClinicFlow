@@ -60,8 +60,8 @@ def update_organisation(
     if data.settings is not None:
         current_settings = OrganisationSettings.model_validate(organisation.settings or {})
         updated = current_settings.model_copy(update=data.settings.model_dump(exclude_unset=True))
-        before["settings"] = current_settings.model_dump()
-        changes["settings"] = updated.model_dump()
+        before["settings"] = current_settings.model_dump(mode="json")
+        changes["settings"] = updated.model_dump(mode="json")
         organisation.settings = changes["settings"]
 
     ctx.audit(
