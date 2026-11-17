@@ -8,13 +8,18 @@ export default async function ClinicAdminLayout({ children }: { children: React.
   const can = (p: string) => hasPermission(access, p);
 
   const items: NavItem[] = [
-    can("branches.read") && { href: "/branches", label: "Branches", icon: "branches" },
-    can("members.read") && { href: "/staff", label: "Staff", icon: "staff" },
-    can("roles.read") && { href: "/roles", label: "Roles", icon: "roles" },
-    can("audit.read") && { href: "/audit", label: "Audit log", icon: "audit" },
-    can("organisation.read") && { href: "/organisation", label: "Organisation", icon: "organisation" },
-    me.is_platform_admin && { href: "/platform", label: "Platform", icon: "platform" },
-  ].filter(Boolean) as NavItem[];
+    can("appointments.read") && { href: "/today", label: "Today", icon: "today" },
+    can("appointments.read") && { href: "/calendar", label: "Calendar", icon: "calendar" },
+    can("patients.read") && { href: "/patients", label: "Patients", icon: "patients" },
+    can("appointments.read") && { href: "/practitioners", label: "Practitioners", icon: "practitioners", section: "Practice setup" },
+    can("appointments.read") && { href: "/appointment-types", label: "Appointment types", icon: "types", section: "Practice setup" },
+    can("branches.read") && { href: "/branches", label: "Branches", icon: "branches", section: "Practice setup" },
+    can("members.read") && { href: "/staff", label: "Staff", icon: "staff", section: "Practice setup" },
+    can("roles.read") && { href: "/roles", label: "Roles", icon: "roles", section: "Practice setup" },
+    can("audit.read") && { href: "/audit", label: "Audit log", icon: "audit", section: "Practice setup" },
+    can("organisation.read") && { href: "/organisation", label: "Organisation", icon: "organisation", section: "Practice setup" },
+    me.is_platform_admin && { href: "/platform", label: "Platform", icon: "platform", section: "Platform" },
+].filter(Boolean) as NavItem[];
 
   const organisations = me.memberships
     .filter((m) => m.status === "active" && m.organisation_status === "active")

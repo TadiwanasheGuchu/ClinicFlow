@@ -4,8 +4,16 @@ Healthcare practice management for independent practitioners, private practices 
 multi-branch clinics in Namibia. See [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) for the product
 specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
 
-**Status:** Phase 1 (platform foundation) — multi-tenancy, authentication, branches, staff,
-roles and permissions, audit log. No patient or clinical features yet.
+**Status:** Phases 1 and 2 are built.
+
+- **Platform foundation:** multi-tenancy, authentication, branches, staff, roles and
+  permissions, audit log.
+- **Patients and scheduling:** patient register with duplicate detection, practitioner
+  registration verification, working hours and leave, appointment types, a booking engine
+  that prevents double-booking at the database level, a Today reception list, and a day
+  calendar.
+
+No clinical records yet (Phase 4).
 
 ## Layout
 

@@ -2,6 +2,9 @@ export type FormState = {
   error?: string;
   success?: string;
   fieldErrors?: Record<string, string>;
+  /** Machine-readable error code and details from the API (e.g. duplicate candidates). */
+  code?: string;
+  details?: Record<string, unknown>;
 };
 
 export const initialFormState: FormState = {};

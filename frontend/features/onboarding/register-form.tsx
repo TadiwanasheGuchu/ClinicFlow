@@ -3,13 +3,13 @@
 import { useActionState } from "react";
 
 import { describedBy, Field, Input } from "@/components/ui/field";
-import { FormMessage, SubmitButton } from "@/components/ui/form";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/ui/form";
 import { initialFormState } from "@/lib/form";
 
 import { registerOrganisation } from "./actions";
 
 export function RegisterOrganisationForm() {
-  const [state, action] = useActionState(registerOrganisation, initialFormState);
+  const [state, action, pending] = useActionState(registerOrganisation, initialFormState);
   const err = (key: string) => state.fieldErrors?.[key];
 
   const text = (id: string, label: string, opts: { required?: boolean; hint?: string; type?: string; defaultValue?: string; placeholder?: string } = {}) => (
@@ -28,7 +28,7 @@ export function RegisterOrganisationForm() {
   );
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <ActionForm action={action} pending={pending} className="flex flex-col gap-4">
       <FormMessage state={state} />
       <div className="grid gap-4 sm:grid-cols-2">
         {text("name", "Practice name", { required: true })}
@@ -49,6 +49,6 @@ export function RegisterOrganisationForm() {
       <div>
         <SubmitButton pendingLabel="Creating…">Create practice</SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }

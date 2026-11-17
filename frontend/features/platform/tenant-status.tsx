@@ -4,13 +4,13 @@ import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
-import { FormMessage, SubmitButton } from "@/components/ui/form";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/ui/form";
 import { type FormState, initialFormState } from "@/lib/form";
 
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
 export function TenantStatusControl({ action, name, suspend }: { action: Action; name: string; suspend: boolean }) {
-  const [state, formAction] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(action, initialFormState);
   const [open, setOpen] = useState(false);
   const label = suspend ? `Suspend ${name}` : `Reactivate ${name}`;
   if (!open) {
@@ -24,7 +24,7 @@ export function TenantStatusControl({ action, name, suspend }: { action: Action;
     );
   }
   return (
-    <form action={formAction} className="flex flex-col items-end gap-2">
+    <ActionForm action={formAction} pending={pending} className="flex flex-col items-end gap-2">
       <FormMessage state={state} />
       <label className="sr-only" htmlFor={`reason-${name}`}>Reason</label>
       <Input id={`reason-${name}`} name="reason" required minLength={3} placeholder="Reason (audited)" className="w-56" />
@@ -34,6 +34,6 @@ export function TenantStatusControl({ action, name, suspend }: { action: Action;
         </Button>
         <SubmitButton variant={suspend ? "danger" : "primary"}>{label}</SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }

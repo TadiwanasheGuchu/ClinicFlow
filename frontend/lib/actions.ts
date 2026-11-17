@@ -11,7 +11,12 @@ export async function attempt(fn: () => Promise<unknown>, success?: string): Pro
     return success ? { success } : {};
   } catch (error) {
     if (error instanceof ApiError) {
-      return { error: error.message, fieldErrors: error.fieldErrors };
+      return {
+        error: error.message,
+        fieldErrors: error.fieldErrors,
+        code: error.code,
+        details: error.details,
+      };
     }
     throw error;
   }

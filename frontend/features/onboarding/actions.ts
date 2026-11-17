@@ -37,5 +37,5 @@ export async function acceptInvitation(organisationId: string): Promise<void> {
     tenant: false,
   });
   await setActiveOrgId(organisationId);
-  redirect("/branches");
+  redirect("/");
 }

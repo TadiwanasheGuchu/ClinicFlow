@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 **ClinicFlow — Healthcare, organised.** A multi-tenant Healthcare Practice Management System (HPMS) for independent practitioners, private practices and multi-branch clinics. Initial market: Swakopmund and Walvis Bay (Erongo Region, Namibia), then nationwide. Currency: Namibian Dollar (NAD). Responsive web app (desktop + mobile).
 
-> **Status:** Phase 1 (platform foundation) is built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
+> **Status:** Phases 1 (platform foundation) and 2 (patients and scheduling) are built — see "Implementation conventions" below and `README.md` for commands. If something here conflicts with existing code, ask before diverging.
 >
 > **Full specification:** [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) — the complete product requirements, per-module features, full table/column definitions, commercial model and roadmap. Read the relevant section before implementing a module or designing its tables.
 
@@ -92,11 +92,14 @@ Dev environment (Docker Compose): frontend, backend, PostgreSQL, Redis, worker, 
 - The app connects as `clinicflow_app`; migrations run as `clinicflow_owner`. Neither is a superuser. Never use a superuser at runtime.
 - Avoid `RETURNING` on inserts into tables whose SELECT policy may not match the new row (set defaults client-side, as `audit_logs.timestamp` does).
 - New permission codes go in `app/core/permissions.py` (and role templates); `python -m app.cli sync-permissions` upserts them on deploy.
+- Booking rules live in `app/modules/scheduling/service.py`; the DB exclusion constraints on `appointments` are the final guard against double-booking. Map `ExclusionViolation` to 409 `slot_taken`.
+- Clinical permissions are filtered out in `get_tenant` unless the member's staff profile is verified and the licence current (rule 12) — don't bypass this when adding clinical endpoints.
 - Tests use real PostgreSQL (`backend/tests/conftest.py`). Every feature gets cross-tenant and permission-denial tests.
 
 **Frontend**
 - Server components and server actions call the API through `api()` in `lib/api.ts`. Tokens never reach the browser; don't add client-side API calls with tokens.
-- Mutations are server actions wrapped in `attempt()` (`lib/actions.ts`), returning `FormState` for `useActionState` forms.
+- Mutations are server actions wrapped in `attempt()` (`lib/actions.ts`), returning `FormState` for `useActionState` forms. Render forms with `<ActionForm action={formAction} pending={pending}>` (`components/ui/form.tsx`), not `<form action>`: React 19 resets uncontrolled forms after every action, which would wipe input on validation errors.
+- Times: scheduling uses the organisation timezone (`Africa/Windhoek`); use helpers in `lib/time.ts` (`dayRange`, `localISO`, `dateOf`, `timeOf`), never `iso.slice(0, 10)` for a local date.
 - UI primitives live in `components/ui/`; merge classes with `cn()` from `lib/cn.ts`. Gate UI with `hasPermission` / `hasOrgWide`, but the API is the authority.
 
 ---

@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { describedBy, Field, Input, Select, Textarea } from "@/components/ui/field";
-import { FormMessage, SubmitButton } from "@/components/ui/form";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/ui/form";
 import { type FormState, initialFormState } from "@/lib/form";
 
 type Option = { id: string; name: string };
@@ -91,10 +91,10 @@ function AssignmentsEditor({
 }
 
 export function InviteForm({ action, roles, branches }: { action: Action; roles: Option[]; branches: Option[] }) {
-  const [state, formAction] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(action, initialFormState);
   const err = (k: string) => state.fieldErrors?.[k];
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-4">
+    <ActionForm action={formAction} pending={pending} className="flex max-w-2xl flex-col gap-4">
       <FormMessage state={state} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="full_name" label="Full name" required error={err("full_name")}>
@@ -108,7 +108,7 @@ export function InviteForm({ action, roles, branches }: { action: Action; roles:
       <div>
         <SubmitButton pendingLabel="Sending…">Invite</SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -123,15 +123,15 @@ export function RolesForm({
   branches: Option[];
   initial: Assignment[];
 }) {
-  const [state, formAction] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(action, initialFormState);
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <ActionForm action={formAction} pending={pending} className="flex flex-col gap-4">
       <FormMessage state={state} />
       <AssignmentsEditor roles={roles} branches={branches} initial={initial} />
       <div>
         <SubmitButton>Save roles</SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
 
@@ -145,7 +145,7 @@ export function StatusForm({
   personName: string;
   mode: "suspend" | "reactivate";
 }) {
-  const [state, formAction] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(action, initialFormState);
   const [confirming, setConfirming] = useState(false);
   const label = mode === "suspend" ? `Suspend ${personName}` : `Reactivate ${personName}`;
 
@@ -160,7 +160,7 @@ export function StatusForm({
     );
   }
   return (
-    <form action={formAction} className="flex max-w-lg flex-col gap-3">
+    <ActionForm action={formAction} pending={pending} className="flex max-w-lg flex-col gap-3">
       <FormMessage state={state} />
       <p className="text-base text-text">
         {mode === "suspend"
@@ -176,6 +176,6 @@ export function StatusForm({
           Cancel
         </Button>
       </div>
-    </form>
+    </ActionForm>
   );
 }

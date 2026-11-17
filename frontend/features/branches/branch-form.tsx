@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { describedBy, Field, Input, Textarea } from "@/components/ui/field";
-import { FormMessage, SubmitButton } from "@/components/ui/form";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/ui/form";
 import { type FormState, initialFormState } from "@/lib/form";
 import type { Branch, Weekday } from "@/types/api";
 
@@ -20,7 +20,7 @@ const DAYS: { key: Weekday; label: string }[] = [
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
 export function BranchForm({ action, branch }: { action: Action; branch?: Branch }) {
-  const [state, formAction] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(action, initialFormState);
   const err = (key: string) => state.fieldErrors?.[key];
   const hoursError = Object.entries(state.fieldErrors ?? {}).find(([k]) => k.startsWith("operating_hours"))?.[1];
 
@@ -31,7 +31,7 @@ export function BranchForm({ action, branch }: { action: Action; branch?: Branch
   );
 
   return (
-    <form action={formAction} className="flex max-w-3xl flex-col gap-5">
+    <ActionForm action={formAction} pending={pending} className="flex max-w-3xl flex-col gap-5">
       <FormMessage state={state} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="name" label="Branch name" required error={err("name")}>
@@ -76,9 +76,9 @@ export function BranchForm({ action, branch }: { action: Action; branch?: Branch
                   </td>
                   {open ? (
                     <td className="flex items-center gap-2 pt-1.5">
-                      <Input type="time" aria-label={`${label} opens`} name={`hours.${key}.open`} defaultValue={interval?.open ?? "08:00"} className="w-32 font-mono" required />
+                      <Input type="time" aria-label={`${label} opens`} name={`hours.${key}.open`} defaultValue={interval?.open ?? "08:00"} className="w-36 font-mono" required />
                       <span className="text-text-muted">to</span>
-                      <Input type="time" aria-label={`${label} closes`} name={`hours.${key}.close`} defaultValue={interval?.close ?? "17:00"} className="w-32 font-mono" required />
+                      <Input type="time" aria-label={`${label} closes`} name={`hours.${key}.close`} defaultValue={interval?.close ?? "17:00"} className="w-36 font-mono" required />
                     </td>
                   ) : (
                     <td className="text-text-muted">Closed</td>
@@ -93,6 +93,6 @@ export function BranchForm({ action, branch }: { action: Action; branch?: Branch
       <div>
         <SubmitButton>{branch ? "Save branch" : "Create branch"}</SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }

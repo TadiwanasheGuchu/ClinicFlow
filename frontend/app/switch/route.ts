@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     (m) => m.organisation_id === target && m.status === "active" && m.organisation_status === "active",
   );
   // Only same-site relative paths are accepted as the return location.
-  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/branches";
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
   const response = NextResponse.redirect(new URL(allowed ? safeNext : "/onboarding", request.url));
   if (allowed && target) {
     response.cookies.set(ORG_COOKIE, target, orgCookieOptions(request.nextUrl.protocol === "https:"));

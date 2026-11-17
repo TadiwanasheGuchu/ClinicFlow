@@ -115,3 +115,119 @@ export type Tenant = {
   status: string;
   created_at: string;
 };
+
+export type PatientSummary = {
+  id: string;
+  patient_number: string;
+  first_name: string;
+  last_name: string;
+  date_of_birth: string;
+  phone: string | null;
+  status: string;
+};
+
+export type EmergencyContact = { name: string; phone: string; relationship: string | null };
+
+export type Patient = PatientSummary & {
+  sex: string | null;
+  nationality: string | null;
+  id_number: string | null;
+  email: string | null;
+  address: string | null;
+  emergency_contact: EmergencyContact | null;
+  preferred_channel: string;
+  created_at: string;
+};
+
+export type StaffProfile = {
+  id: string;
+  membership_id: string;
+  profession: string;
+  specialty: string | null;
+  registration_body: string | null;
+  professional_number: string | null;
+  licence_expiry_date: string | null;
+  registration_status: "unverified" | "verified" | "rejected";
+  verified_by: string | null;
+  verified_at: string | null;
+  verification_note: string | null;
+  licence_current: boolean;
+};
+
+export type Provider = {
+  id: string;
+  membership_id: string;
+  display_name: string;
+  profession: string;
+  specialty: string | null;
+  booking_enabled: boolean;
+  online_booking_enabled: boolean;
+  credentials_current: boolean;
+  branch_ids: string[];
+};
+
+export type AvailabilityWindow = {
+  id?: string;
+  branch_id: string;
+  weekday: number;
+  start_time: string;
+  end_time: string;
+  effective_from: string | null;
+  effective_until: string | null;
+};
+
+export type Unavailability = { id: string; start_at: string; end_at: string; reason: string | null };
+
+export type AppointmentType = {
+  id: string;
+  name: string;
+  description: string | null;
+  duration_minutes: number;
+  fee: string;
+  booking_buffer_minutes: number;
+  is_active: boolean;
+};
+
+export type Slot = { start_at: string; end_at: string };
+
+export type AppointmentStatus =
+  | "requested"
+  | "pending_confirmation"
+  | "confirmed"
+  | "checked_in"
+  | "waiting"
+  | "in_consultation"
+  | "completed"
+  | "cancelled"
+  | "no_show";
+
+export type Appointment = {
+  id: string;
+  reference: string;
+  status: AppointmentStatus;
+  start_at: string;
+  end_at: string;
+  booking_source: string;
+  booking_note: string | null;
+  cancellation_reason: string | null;
+  is_override: boolean;
+  patient: { id: string; name: string; patient_number: string; date_of_birth: string };
+  provider: { id: string; name: string };
+  branch: { id: string; name: string };
+  appointment_type: { id: string; name: string; duration_minutes: number };
+  created_at: string;
+  updated_at: string;
+};
+
+export type AppointmentEvent = {
+  id: string;
+  event_type: string;
+  previous_status: string | null;
+  new_status: string | null;
+  actor_user_id: string | null;
+  reason: string | null;
+  details: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AppointmentDetail = Appointment & { events: AppointmentEvent[] };

@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { Checkbox, describedBy, Field, Input, Textarea } from "@/components/ui/field";
-import { FormMessage, SubmitButton } from "@/components/ui/form";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/ui/form";
 import { Tag } from "@/components/ui/status";
 import { type FormState, initialFormState } from "@/lib/form";
 import type { Permission, Role } from "@/types/api";
@@ -36,7 +36,7 @@ export function RoleForm({
   role?: Role;
   readOnly?: boolean;
 }) {
-  const [state, formAction] = useActionState(action, initialFormState);
+  const [state, formAction, pending] = useActionState(action, initialFormState);
   const err = (k: string) => state.fieldErrors?.[k];
   const groups = new Map<string, Permission[]>();
   for (const p of permissions) {
@@ -45,7 +45,7 @@ export function RoleForm({
   }
 
   return (
-    <form action={formAction} className="flex max-w-3xl flex-col gap-4">
+    <ActionForm action={formAction} pending={pending} className="flex max-w-3xl flex-col gap-4">
       <FormMessage state={state} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="name" label="Role name" required error={err("name")}>
@@ -88,6 +88,6 @@ export function RoleForm({
           <SubmitButton>{role ? "Save role" : "Create role"}</SubmitButton>
         </div>
       )}
-    </form>
+    </ActionForm>
   );
 }

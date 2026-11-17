@@ -14,6 +14,7 @@ export class ApiError extends Error {
     public code: string,
     message: string,
     public fieldErrors: Record<string, string> = {},
+    public details: Record<string, unknown> = {},
   ) {
     super(message);
   }
@@ -22,8 +23,11 @@ export class ApiError extends Error {
 type ValidationDetail = { loc: (string | number)[]; msg: string };
 
 function parseError(status: number, body: unknown): ApiError {
-  const b = body as { error?: { code: string; message: string }; detail?: ValidationDetail[] };
-  if (b?.error) return new ApiError(status, b.error.code, b.error.message);
+  const b = body as {
+    error?: { code: string; message: string; details?: Record<string, unknown> };
+    detail?: ValidationDetail[];
+  };
+  if (b?.error) return new ApiError(status, b.error.code, b.error.message, {}, b.error.details ?? {});
   if (Array.isArray(b?.detail)) {
     const fieldErrors: Record<string, string> = {};
     for (const d of b.detail) {

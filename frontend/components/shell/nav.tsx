@@ -1,11 +1,28 @@
 "use client";
 
 import { cn } from "@/lib/cn";
-import { Building2, Landmark, ScrollText, Settings, ShieldCheck, Users } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  ClipboardList,
+  Contact,
+  Landmark,
+  ListChecks,
+  ScrollText,
+  Settings,
+  ShieldCheck,
+  Stethoscope,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ICONS = {
+  today: ClipboardList,
+  calendar: CalendarDays,
+  patients: Contact,
+  practitioners: Stethoscope,
+  types: ListChecks,
   branches: Building2,
   staff: Users,
   roles: ShieldCheck,
@@ -14,16 +31,23 @@ const ICONS = {
   platform: Landmark,
 };
 
-export type NavItem = { href: string; label: string; icon: keyof typeof ICONS };
+export type NavItem = { href: string; label: string; icon: keyof typeof ICONS; section?: string };
 
 export function Nav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Main" className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
-      {items.map((item) => {
+      {items.map((item, index) => {
         const Icon = ICONS[item.icon];
+        const heading = item.section && item.section !== items[index - 1]?.section ? item.section : null;
         const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
+          <div key={item.href} className="contents">
+          {heading && (
+            <span className="hidden px-2.5 pt-4 pb-1 text-xs font-medium tracking-wide text-text-muted uppercase md:block">
+              {heading}
+            </span>
+          )}
           <Link
             key={item.href}
             href={item.href}
@@ -38,6 +62,7 @@ export function Nav({ items }: { items: NavItem[] }) {
             <Icon size={20} strokeWidth={1.5} aria-hidden />
             {item.label}
           </Link>
+          </div>
         );
       })}
     </nav>

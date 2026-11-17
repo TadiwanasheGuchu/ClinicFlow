@@ -3,14 +3,14 @@
 import { useActionState } from "react";
 
 import { describedBy, Field, Input } from "@/components/ui/field";
-import { FormMessage, SubmitButton } from "@/components/ui/form";
+import { ActionForm, FormMessage, SubmitButton } from "@/components/ui/form";
 import { initialFormState } from "@/lib/form";
 import type { Organisation } from "@/types/api";
 
 import { updateOrganisation } from "./actions";
 
 export function OrganisationForm({ organisation }: { organisation: Organisation }) {
-  const [state, action] = useActionState(updateOrganisation, initialFormState);
+  const [state, action, pending] = useActionState(updateOrganisation, initialFormState);
   const err = (k: string) => state.fieldErrors?.[k];
   const s = organisation.settings;
 
@@ -37,7 +37,7 @@ export function OrganisationForm({ organisation }: { organisation: Organisation 
   );
 
   return (
-    <form action={action} className="flex max-w-3xl flex-col gap-5">
+    <ActionForm action={action} pending={pending} className="flex max-w-3xl flex-col gap-5">
       <FormMessage state={state} />
       <fieldset className="grid gap-4 sm:grid-cols-2">
         <legend className="mb-2 text-sm font-medium text-text">Practice details</legend>
@@ -57,6 +57,6 @@ export function OrganisationForm({ organisation }: { organisation: Organisation 
       <div>
         <SubmitButton>Save organisation</SubmitButton>
       </div>
-    </form>
+    </ActionForm>
   );
 }
