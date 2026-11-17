@@ -3,6 +3,17 @@
 from app.modules.appointments.models import Appointment, AppointmentEvent
 from app.modules.audit.models import AuditLog
 from app.modules.branches.models import Branch
+from app.modules.clinical.models import (
+    Allergy,
+    AllergyAssessment,
+    ClinicalNote,
+    Diagnosis,
+    Encounter,
+    Observation,
+    Prescription,
+    PrescriptionItem,
+    Referral,
+)
 from app.modules.members.models import Membership, MembershipRole
 from app.modules.notifications.models import Notification
 from app.modules.organisations.models import Organisation
@@ -20,14 +31,20 @@ from app.modules.users.models import User
 from app.shared.counters import OrganisationCounter
 
 __all__ = [
+    "Allergy",
+    "AllergyAssessment",
     "Appointment",
     "AppointmentEvent",
     "AppointmentType",
     "AuditLog",
     "Branch",
+    "ClinicalNote",
+    "Diagnosis",
+    "Encounter",
     "Membership",
     "MembershipRole",
     "Notification",
+    "Observation",
     "Organisation",
     "OrganisationCounter",
     "OrganisationSlug",
@@ -35,9 +52,12 @@ __all__ = [
     "PatientAccount",
     "PatientLinkCode",
     "Permission",
+    "Prescription",
+    "PrescriptionItem",
     "Provider",
     "ProviderAvailability",
     "ProviderUnavailability",
+    "Referral",
     "Role",
     "RolePermission",
     "StaffProfile",
