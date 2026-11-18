@@ -9,6 +9,7 @@ from app.modules.audit.router import router as audit_router
 from app.modules.billing.router import router as billing_router
 from app.modules.branches.router import router as branches_router
 from app.modules.clinical.router import router as clinical_router
+from app.modules.inventory.router import router as inventory_router
 from app.modules.laboratory.router import router as laboratory_router
 from app.modules.medical_aid.router import router as medical_aid_router
 from app.modules.members.router import router as members_router
@@ -19,6 +20,7 @@ from app.modules.platform.router import router as platform_router
 from app.modules.portal.router import router as portal_router
 from app.modules.reports.router import router as reports_router
 from app.modules.roles.router import router as roles_router
+from app.modules.roster.router import router as roster_router
 from app.modules.scheduling.router import router as scheduling_router
 from app.modules.staff.router import router as staff_router
 from app.modules.users.router import router as me_router
@@ -57,6 +59,8 @@ def create_app() -> FastAPI:
         appointments_router,
         clinical_router,
         laboratory_router,
+        inventory_router,
+        roster_router,
         billing_router,
         medical_aid_router,
         reports_router,

@@ -58,6 +58,18 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     PermissionDef("lab.read", "View laboratory orders and results"),
     PermissionDef("lab.process", "Record specimen collection, laboratory progress and results"),
     PermissionDef("lab.configure", "Manage the laboratory test list and laboratories"),
+    # Phase 6: inventory and staff rostering.
+    PermissionDef("inventory.read", "View stock levels, expiry and stock history"),
+    PermissionDef(
+        "inventory.manage", "Receive stock, record usage, transfer stock and raise purchase orders"
+    ),
+    PermissionDef(
+        "inventory.adjust",
+        "Stock counts and write-offs; manage the item list and suppliers",
+        True,
+    ),
+    PermissionDef("roster.read", "View the staff roster"),
+    PermissionDef("roster.manage", "Plan shifts and decide leave requests"),
 )
 
 PERMISSION_CODES: frozenset[str] = frozenset(p.code for p in PERMISSIONS)
@@ -117,6 +129,9 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "scheduling.manage",
                 "credentials.verify",
                 "lab.configure",
+                "inventory.read",
+                "roster.read",
+                "roster.manage",
             }
         ),
     ),
@@ -137,6 +152,10 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "appointments.override",
                 "scheduling.manage",
                 "reports.operational",
+                "inventory.read",
+                "inventory.manage",
+                "roster.read",
+                "roster.manage",
             }
         ),
     ),
@@ -154,6 +173,11 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "billing.read",
                 "reports.operational",
                 "reports.financial",
+                "inventory.read",
+                "inventory.manage",
+                "inventory.adjust",
+                "roster.read",
+                "roster.manage",
             }
         ),
     ),
@@ -171,6 +195,7 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "appointments.read",
                 "appointments.manage",
                 "billing.read",
+                "roster.read",
             }
         ),
     ),
@@ -192,6 +217,8 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "prescriptions.issue",
                 "lab.read",
                 "lab.process",
+                "roster.read",
+                "inventory.read",
             }
         ),
     ),
@@ -209,6 +236,9 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "clinical.write",
                 "lab.read",
                 "lab.process",
+                "roster.read",
+                "inventory.read",
+                "inventory.manage",
             }
         ),
     ),
@@ -223,6 +253,7 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "patients.read",
                 "lab.read",
                 "lab.process",
+                "roster.read",
             }
         ),
     ),
@@ -240,6 +271,7 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "billing.manage",
                 "medical_aid.manage",
                 "reports.financial",
+                "roster.read",
             }
         ),
     ),
@@ -248,7 +280,15 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
         "Auditor",
         "Read-only access to configuration and the audit log.",
         frozenset(
-            {"organisation.read", "branches.read", "members.read", "roles.read", "audit.read"}
+            {
+                "organisation.read",
+                "branches.read",
+                "members.read",
+                "roles.read",
+                "audit.read",
+                "inventory.read",
+                "roster.read",
+            }
         ),
     ),
 )

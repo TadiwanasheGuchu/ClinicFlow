@@ -1,3 +1,4 @@
+from app.core.permissions import ROLE_TEMPLATES
 from tests.conftest import role_id
 
 
@@ -67,9 +68,9 @@ def test_change_roles_takes_effect(owner, add_member):
     assert response.status_code == 200
     assert [r["role_name"] for r in response.json()["roles"]] == ["Auditor"]
     assert member.get("/api/v1/audit-logs").status_code == 200
-    assert member.get("/api/v1/me/access").json()["permissions"] == sorted(
-        ["organisation.read", "branches.read", "members.read", "roles.read", "audit.read"]
-    )
+    auditor = next(t for t in ROLE_TEMPLATES if t.key == "auditor")
+    assert member.get("/api/v1/me/access").json()["permissions"] == sorted(auditor.permissions)
+    assert all(p.endswith(".read") for p in auditor.permissions)  # read-only
 
 
 def test_cannot_modify_self(owner):

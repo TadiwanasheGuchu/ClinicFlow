@@ -15,6 +15,14 @@ from app.modules.clinical.models import (
     PrescriptionItem,
     Referral,
 )
+from app.modules.inventory.models import (
+    InventoryItem,
+    PurchaseOrder,
+    PurchaseOrderLine,
+    StockBatch,
+    StockMovement,
+    Supplier,
+)
 from app.modules.laboratory.models import (
     Laboratory,
     LabOrder,
@@ -35,6 +43,7 @@ from app.modules.organisations.models import Organisation
 from app.modules.patients.models import Patient
 from app.modules.portal.models import OrganisationSlug, PatientAccount, PatientLinkCode
 from app.modules.roles.models import Permission, Role, RolePermission
+from app.modules.roster.models import LeaveRequest, Shift
 from app.modules.scheduling.models import (
     AppointmentType,
     Provider,
@@ -58,6 +67,7 @@ __all__ = [
     "CreditNote",
     "Diagnosis",
     "Encounter",
+    "InventoryItem",
     "Invoice",
     "InvoiceItem",
     "LabOrder",
@@ -66,6 +76,7 @@ __all__ = [
     "LabResult",
     "LabTest",
     "Laboratory",
+    "LeaveRequest",
     "MedicalAidClaim",
     "MedicalAidFund",
     "MedicalAidMembership",
@@ -86,11 +97,17 @@ __all__ = [
     "Provider",
     "ProviderAvailability",
     "ProviderUnavailability",
+    "PurchaseOrder",
+    "PurchaseOrderLine",
     "Referral",
     "Refund",
     "Role",
     "RolePermission",
     "Service",
+    "Shift",
     "StaffProfile",
+    "StockBatch",
+    "StockMovement",
+    "Supplier",
     "User",
 ]
