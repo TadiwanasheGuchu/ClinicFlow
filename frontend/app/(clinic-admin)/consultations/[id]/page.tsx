@@ -11,11 +11,14 @@ import {
 } from "@/features/clinical/actions";
 import { AmendButton, DiagnosisForm, NewNote, NoteEditor, PrescriptionForm, ReasonAction, ReferralForm, SimpleAction, VitalsForm } from "@/features/clinical/forms";
 import { loadClinical } from "@/features/clinical/load";
+import { orderTests } from "@/features/lab/actions";
+import { LabOrderForm } from "@/features/lab/forms";
+import { LabStatus } from "@/features/lab/status";
 import { api } from "@/lib/api";
 import { ENCOUNTER_TYPE_LABEL, NOTE_SECTIONS, NOTE_TYPE_LABEL, OBS_LABEL } from "@/lib/clinical";
 import { formatDateTime } from "@/lib/format";
 import { requirePermission } from "@/lib/session";
-import type { AllergySummary, ClinicalNote, EncounterDetail, Patient } from "@/types/api";
+import type { AllergySummary, ClinicalNote, EncounterDetail, Laboratory, LabOrderSummary, LabTest, Page, Patient } from "@/types/api";
 
 export const metadata: Metadata = { title: "Consultation" };
 
@@ -46,6 +49,13 @@ export default async function ConsultationPage({ params }: { params: Promise<{ i
   const canSign = inBranch("clinical.sign");
   const canPrescribe = inBranch("prescriptions.issue");
   const open = e.status === "open";
+  const canSeeLab = inBranch("lab.read");
+  const canOrderLab = canWrite && open;
+  const [labOrders, labTests, laboratories] = await Promise.all([
+    canSeeLab ? api<Page<LabOrderSummary>>("/lab-orders", { query: { encounter_id: e.id, group: "all", limit: 50 } }) : Promise.resolve(null),
+    canOrderLab ? api<LabTest[]>("/laboratory-tests") : Promise.resolve([] as LabTest[]),
+    canOrderLab ? api<Laboratory[]>("/laboratories") : Promise.resolve([] as Laboratory[]),
+  ]);
 
   // Group note versions; show the newest version first within each group.
   const groups = new Map<string, ClinicalNote[]>();
@@ -175,6 +185,28 @@ export default async function ConsultationPage({ params }: { params: Promise<{ i
           ))}
           {canPrescribe && open ? <PrescriptionForm action={prescribe.bind(null, e.id)} patientName={name} /> : e.prescriptions.length === 0 && <p className="text-text-muted">None issued.</p>}
         </Panel>
+
+        {(canSeeLab || canOrderLab) && (
+          <Panel title="Laboratory">
+            {labOrders && labOrders.items.length > 0 && (
+              <ul className="mb-4 flex flex-col gap-2">
+                {labOrders.items.map((o) => (
+                  <li key={o.id} className="flex flex-wrap items-center justify-between gap-2">
+                    <span>
+                      <Link className="font-mono text-primary hover:underline" href={`/lab/${o.id}`}>{o.order_number}</Link>
+                      {o.urgency === "urgent" && <span className="ml-2 text-sm font-semibold text-danger-text">Urgent</span>}
+                      <span className="ml-2">{o.tests.join(", ")}</span>
+                    </span>
+                    <LabStatus status={o.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+            {canOrderLab ? (
+              <LabOrderForm action={orderTests.bind(null, e.id)} tests={labTests} laboratories={laboratories} patientName={name} />
+            ) : (labOrders?.items.length ?? 0) === 0 && <p className="text-text-muted">No tests requested.</p>}
+          </Panel>
+        )}
 
         <Panel title="Referrals">
           {e.referrals.map((r) => (

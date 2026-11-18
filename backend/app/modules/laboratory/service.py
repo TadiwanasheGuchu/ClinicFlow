@@ -368,7 +368,7 @@ def detail(db: Session, order: LabOrder) -> LabOrderDetail:
         db.scalars(
             select(LabResult)
             .where(LabResult.order_id == order.id)
-            .order_by(LabResult.recorded_at, LabResult.id)
+            .order_by(LabResult.recorded_at, LabResult.analyte, LabResult.id)
         )
     )
     events = list(

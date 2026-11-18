@@ -374,3 +374,25 @@ export type FinancialReport = {
   outstanding_total: string; aged_debt: { bucket: string; invoices: number; amount: string }[];
   claims: { status: ClaimStatus; count: number; claimed: string; paid: string }[]; claims_outstanding: string; claim_rejection_rate_percent: string | null;
 };
+
+// --- Laboratory (Phase 6) ---
+export type LabOrderStatus = "requested" | "collected" | "sent" | "processing" | "completed" | "reviewed" | "cancelled";
+export type LabFlag = "normal" | "low" | "high" | "critical_low" | "critical_high" | "abnormal" | "none";
+export type LabTest = { id: string; code: string; name: string; category: string | null; specimen_type: string | null; is_active: boolean };
+export type Laboratory = { id: string; name: string; phone: string | null; email: string | null; notes: string | null; is_active: boolean };
+export type LabResult = {
+  id: string; item_id: string; analyte: string; value: string; unit: string | null; reference_range: string | null; flag: LabFlag;
+  comment: string | null; status: "final" | "entered_in_error"; status_reason: string | null; recorded_by_name: string; recorded_at: string;
+};
+export type LabOrderSummary = {
+  id: string; order_number: string; patient_id: string; patient_name: string; patient_number: string; branch_id: string; encounter_id: string;
+  status: LabOrderStatus; urgency: "routine" | "urgent"; requested_at: string; requested_by: string; requested_by_name: string;
+  laboratory_name: string | null; tests: string[]; abnormal_results: number;
+};
+export type LabOrderDetail = LabOrderSummary & {
+  clinical_information: string | null; laboratory_id: string | null; external_reference: string | null;
+  collected_at: string | null; sent_at: string | null; completed_at: string | null; reviewed_at: string | null; reviewed_by_name: string | null;
+  review_comment: string | null; cancelled_at: string | null; cancel_reason: string | null;
+  items: { id: string; position: number; test_code: string | null; test_name: string; specimen_type: string | null; resulted: boolean; results: LabResult[] }[];
+  events: { from_status: string | null; to_status: LabOrderStatus; actor_name: string; occurred_at: string; note: string | null }[];
+};

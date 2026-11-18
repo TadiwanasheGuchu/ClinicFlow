@@ -8,11 +8,12 @@ import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { addAllergy, changeAllergy, noKnownAllergies, startConsultation } from "@/features/clinical/actions";
 import { AllergyForm, ReasonAction, SimpleAction } from "@/features/clinical/forms";
 import { loadClinical } from "@/features/clinical/load";
+import { LabStatus } from "@/features/lab/status";
 import { api } from "@/lib/api";
 import { ENCOUNTER_TYPE_LABEL, OBS_LABEL, SEVERITY_LABEL } from "@/lib/clinical";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { hasPermission, requirePermission } from "@/lib/session";
-import type { Branch, ClinicalSummary, Page, Patient } from "@/types/api";
+import type { Branch, ClinicalSummary, LabOrderSummary, Page, Patient } from "@/types/api";
 
 export const metadata: Metadata = { title: "Clinical record" };
 
@@ -21,6 +22,9 @@ export default async function ClinicalRecordPage({ params }: { params: Promise<{
   const { access } = await requirePermission("clinical.read");
   const patient = await loadClinical<Patient>(`/patients/${encodeURIComponent(id)}`);
   const summary = await loadClinical<ClinicalSummary>(`/patients/${patient.id}/clinical-summary`);
+  const labOrders = hasPermission(access, "lab.read")
+    ? await api<Page<LabOrderSummary>>("/lab-orders", { query: { patient_id: patient.id, group: "all", limit: 20 } })
+    : null;
   const name = `${patient.first_name} ${patient.last_name}`;
   const canWrite = hasPermission(access, "clinical.write");
   const writeBranches = canWrite
@@ -91,6 +95,27 @@ export default async function ClinicalRecordPage({ params }: { params: Promise<{
             </ul>
           ) : <p className="text-text-muted">None in the last six months.</p>}
         </Panel>
+
+        {labOrders && (
+          <Panel title="Laboratory">
+            {labOrders.items.length ? (
+              <Table>
+                <THead><tr><TH>Order</TH><TH>Requested</TH><TH>Tests</TH><TH>Status</TH><TH>Flags</TH></tr></THead>
+                <tbody>
+                  {labOrders.items.map((o) => (
+                    <TR key={o.id}>
+                      <TD mono><Link className="text-primary hover:underline" href={`/lab/${o.id}`}>{o.order_number}</Link></TD>
+                      <TD className="tabular">{formatDate(o.requested_at)}</TD>
+                      <TD className="max-w-72 truncate" title={o.tests.join(", ")}>{o.tests.join(", ")}</TD>
+                      <TD><LabStatus status={o.status} /></TD>
+                      <TD>{o.abnormal_results > 0 ? <span className="font-semibold text-warning-text">{o.abnormal_results} flagged</span> : <span className="text-text-muted">—</span>}</TD>
+                    </TR>
+                  ))}
+                </tbody>
+              </Table>
+            ) : <p className="text-text-muted">No laboratory orders.</p>}
+          </Panel>
+        )}
 
         <Panel title="Consultations">
           {summary.encounters.length ? (

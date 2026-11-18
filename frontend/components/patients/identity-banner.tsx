@@ -13,9 +13,9 @@ const SEX: Record<string, string> = {
 };
 
 /** The allergy indicator is never blank (docs/DESIGN.md §6). */
-function AllergyIndicator({ allergies }: { allergies: AllergySummary | null | undefined }) {
+function AllergyIndicator({ allergies, hiddenLabel }: { allergies: AllergySummary | null | undefined; hiddenLabel?: string }) {
   if (allergies === undefined) {
-    return <span className="text-sm text-text-muted">Allergies: not shown in administrative view</span>;
+    return <span className="text-sm text-text-muted">{hiddenLabel ?? "Allergies: not shown in administrative view"}</span>;
   }
   if (allergies === null || allergies.state === "not_recorded") {
     return (
@@ -44,9 +44,12 @@ function AllergyIndicator({ allergies }: { allergies: AllergySummary | null | un
 export function PatientIdentityBanner({
   patient,
   allergies,
+  allergiesHiddenLabel,
 }: {
   patient: { name: string; patient_number: string; date_of_birth: string; sex?: string | null };
   allergies?: AllergySummary | null;
+  /** Shown instead of the allergy list when the viewer's role has no clinical access. */
+  allergiesHiddenLabel?: string;
 }) {
   return (
     <div className="sticky top-0 z-20 -mx-4 mb-4 flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-border bg-surface px-4 py-2 md:-mx-6 md:px-6">
@@ -57,7 +60,7 @@ export function PatientIdentityBanner({
       </span>
       {patient.sex !== undefined && <span className="text-base text-text-muted">{SEX[patient.sex ?? "unknown"]}</span>}
       <span className="font-mono text-sm text-text">{patient.patient_number}</span>
-      <AllergyIndicator allergies={allergies} />
+      <AllergyIndicator allergies={allergies} hiddenLabel={allergiesHiddenLabel} />
     </div>
   );
 }

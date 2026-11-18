@@ -56,9 +56,7 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     PermissionDef("reports.financial", "View financial reports"),
     # Phase 6: laboratory.
     PermissionDef("lab.read", "View laboratory orders and results"),
-    PermissionDef(
-        "lab.process", "Record specimen collection, laboratory progress and results"
-    ),
+    PermissionDef("lab.process", "Record specimen collection, laboratory progress and results"),
     PermissionDef("lab.configure", "Manage the laboratory test list and laboratories"),
 )
 

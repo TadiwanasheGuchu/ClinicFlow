@@ -59,7 +59,7 @@ export function Checkbox({
   description,
   className,
   ...props
-}: ComponentProps<"input"> & { label: string; description?: string }) {
+}: ComponentProps<"input"> & { label: ReactNode; description?: string }) {
   return (
     <label className={cn("flex items-start gap-2 text-base", className)}>
       <input type="checkbox" className="mt-0.5 size-4 accent-primary" {...props} />
