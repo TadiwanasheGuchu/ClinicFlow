@@ -1,7 +1,14 @@
+import threading
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from app.core.config import get_settings
+from app.core.db import get_engine
 from app.core.exceptions import register_exception_handlers
 from app.core.request_context import RequestContextMiddleware
 from app.modules.appointments.router import router as appointments_router
@@ -28,9 +35,26 @@ from app.modules.staff.router import router as staff_router
 from app.modules.users.router import router as me_router
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Optionally run the notification worker in-process (single-service hosting)."""
+    stop = threading.Event()
+    thread = None
+    if get_settings().run_worker_in_api:
+        from app.worker import run
+
+        thread = threading.Thread(target=run, args=(15.0, stop), name="notifications", daemon=True)
+        thread.start()
+    yield
+    stop.set()
+    if thread is not None:
+        thread.join(timeout=5)
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
+        lifespan=lifespan,
         title="ClinicFlow API",
         version="0.1.0",
         docs_url=None if settings.environment == "production" else "/docs",
@@ -79,6 +103,16 @@ def create_app() -> FastAPI:
     @app.get("/health", include_in_schema=False)
     def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/health/ready", include_in_schema=False)
+    def ready() -> JSONResponse:
+        """Readiness: the database answers. No data is read."""
+        try:
+            with get_engine().connect() as conn:
+                conn.execute(text("SELECT 1"))
+        except Exception:
+            return JSONResponse({"status": "database unavailable"}, status_code=503)
+        return JSONResponse({"status": "ok"})
 
     return app
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { safePath } from "@/lib/safe-path";
 
+import { PROVIDER_ID } from "@/lib/auth";
 import { SignInButton } from "./sign-in-button";
 
 export const metadata: Metadata = { title: "Sign in" };
@@ -20,7 +21,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
             ? "Sign in to book and manage your appointments. New here? Choose “Register” on the next screen to create an account."
             : "Use your ClinicFlow account. Staff who were invited by their practice should sign in with the email address the invitation was sent to."}
         </p>
-        <SignInButton callbackUrl={next} />
+        <SignInButton callbackUrl={next} provider={PROVIDER_ID} />
       </div>
     </main>
   );

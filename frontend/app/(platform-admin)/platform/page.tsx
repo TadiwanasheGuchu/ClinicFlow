@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 import { Input } from "@/components/ui/field";
 import { Notice, PageHeader, Pagination } from "@/components/ui/layout";
@@ -9,7 +8,6 @@ import { setTenantStatus } from "@/features/platform/actions";
 import { TenantStatusControl } from "@/features/platform/tenant-status";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
-import { requireWorkspace } from "@/lib/session";
 import type { Page, Tenant } from "@/types/api";
 
 export const metadata: Metadata = { title: "Platform" };
@@ -19,8 +17,6 @@ export default async function PlatformPage({
 }: {
   searchParams: Promise<{ q?: string; offset?: string }>;
 }) {
-  const { me } = await requireWorkspace();
-  if (!me.is_platform_admin) redirect("/not-permitted");
   const { q = "", offset: rawOffset } = await searchParams;
   const offset = Number(rawOffset ?? 0) || 0;
   const page = await api<Page<Tenant>>("/platform/organisations", {

@@ -19,7 +19,7 @@ export async function setTenantStatus(
         tenant: false,
         body: { status, reason: required(form, "reason") },
       }),
-    status === "suspended" ? "Organisation suspended." : "Organisation reactivated.",
+    status === "suspended" ? "Organisation suspended." : "Organisation is active.",
   );
   revalidatePath("/platform");
   return state;

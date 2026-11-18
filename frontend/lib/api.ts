@@ -3,6 +3,8 @@ import "server-only";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { isHttps } from "@/lib/public-url";
+
 import { getAccessToken } from "@/lib/auth";
 
 const API_URL = process.env.CLINICFLOW_API_URL ?? "http://localhost:8000";
@@ -54,7 +56,7 @@ export const orgCookieOptions = (secure: boolean) => ({
 /** Select the active organisation from a server action. Callers must only pass an
  *  organisation the user has just joined or created; the API re-checks membership anyway. */
 export async function setActiveOrgId(organisationId: string): Promise<void> {
-  (await cookies()).set(ORG_COOKIE, organisationId, orgCookieOptions(process.env.NODE_ENV === "production"));
+  (await cookies()).set(ORG_COOKIE, organisationId, orgCookieOptions(isHttps));
 }
 
 type Options = {

@@ -4,7 +4,7 @@ Healthcare practice management for independent practitioners, private practices 
 multi-branch clinics in Namibia. See [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) for the product
 specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
 
-**Status:** Phases 1–6 are built. Next: Phase 7 (security testing, pilot and launch).
+**Status:** Phases 1–6 are built. Phase 7 (launch) is prepared: free hosting on Render, Neon and Auth0 with encrypted, restore-tested daily backups. See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 - **Platform foundation:** multi-tenancy, authentication, branches, staff, roles and
   permissions, audit log.

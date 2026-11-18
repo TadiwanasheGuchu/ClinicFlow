@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     oidc_issuer: str = "http://localhost:8080/realms/clinicflow"
     oidc_audience: str = "clinicflow-api"
     oidc_jwks_url: str | None = None
+    # Providers that only allow namespaced custom claims in access tokens (Auth0) put
+    # email, email_verified and name under this prefix, e.g. "https://clinicflow.app/".
+    oidc_claim_namespace: str = ""
     oidc_algorithms: list[str] = Field(default_factory=lambda: ["RS256"])
     # When non-empty, users holding privileged permissions must present a token
     # whose `acr` claim is one of these values (i.e. they completed MFA).
@@ -47,6 +50,9 @@ class Settings(BaseSettings):
     smtp_starttls: bool = False
     email_from: str = "ClinicFlow <no-reply@clinicflow.local>"
     notification_max_attempts: int = 5
+    # Run the notification worker as a thread inside the API process, for hosting that
+    # offers a single web service and no background workers (e.g. a free tier).
+    run_worker_in_api: bool = False
     # Public URL of the web app, used in patient messages that link to the portal.
     public_web_url: str = "http://localhost:3000"
 

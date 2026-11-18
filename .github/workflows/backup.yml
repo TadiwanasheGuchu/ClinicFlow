@@ -1,0 +1,64 @@
+# Daily encrypted database backup with an automatic restore drill.
+# Enable by setting the repository variable BACKUPS_ENABLED=true and the secrets
+# BACKUP_DATABASE_URL (maintenance role) and BACKUP_PASSPHRASE. See docs/DEPLOYMENT.md.
+name: Database backup
+
+on:
+  schedule:
+    - cron: "17 0 * * *"   # 02:17 in Windhoek
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: ${{ vars.BACKUPS_ENABLED == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      scratch:   # throwaway server for the restore drill
+        image: postgres:17.2
+        env:
+          POSTGRES_PASSWORD: scratch
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-retries 20
+    env:
+      BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: PostgreSQL 17 client (pg_dump must not be older than the server)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -yq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.11"
+      - run: uv sync --frozen --no-dev
+        working-directory: backend
+      - name: Back up
+        run: |
+          name="clinicflow-$(date -u +%Y%m%d-%H%M).dump.gpg"
+          echo "BACKUP_FILE=$name" >> "$GITHUB_ENV"
+          deploy/backup/counts.sh > counts.txt
+          deploy/backup/backup.sh "$name"
+      - name: Restore drill
+        env:
+          SCRATCH_ADMIN_URL: postgresql://postgres:scratch@localhost:5432/postgres
+          SOURCE_COUNTS: counts.txt
+        run: deploy/backup/verify-restore.sh "$BACKUP_FILE"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_FILE }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30
+          if-no-files-found: error

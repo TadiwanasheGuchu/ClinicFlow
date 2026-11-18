@@ -1,0 +1,33 @@
+# Make a signed-in user a platform administrator (the hosted service has no shell).
+# The person must have signed in to ClinicFlow once. Needs the MIGRATION_DATABASE_URL secret.
+name: Grant platform admin
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: Email address of the user (they must have signed in once)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  grant:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.11"
+      - run: uv sync --frozen --no-dev
+      - name: Grant
+        env:
+          CLINICFLOW_MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          # Passed through the environment, never interpolated into the shell command.
+          TARGET_EMAIL: ${{ inputs.email }}
+        run: uv run python -m app.cli grant-platform-admin "$TARGET_EMAIL"

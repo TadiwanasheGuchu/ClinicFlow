@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { api, ORG_COOKIE, orgCookieOptions } from "@/lib/api";
+import { isHttps, publicUrl } from "@/lib/public-url";
 import type { Me } from "@/types/api";
 
 /** Select the active organisation. Only organisations the user is an active member of. */
@@ -13,9 +14,9 @@ export async function GET(request: NextRequest) {
   );
   // Only same-site relative paths are accepted as the return location.
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
-  const response = NextResponse.redirect(new URL(allowed ? safeNext : "/onboarding", request.url));
+  const response = NextResponse.redirect(publicUrl(allowed ? safeNext : "/onboarding"));
   if (allowed && target) {
-    response.cookies.set(ORG_COOKIE, target, orgCookieOptions(request.nextUrl.protocol === "https:"));
+    response.cookies.set(ORG_COOKIE, target, orgCookieOptions(isHttps));
   }
   return response;
 }

@@ -6,6 +6,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { linkAccount, registerSelf } from "@/features/portal/actions";
 import { LinkForm, RegisterSelfForm } from "@/features/portal/forms";
 import { SignInButton } from "@/app/(public)/signin/sign-in-button";
+import { PROVIDER_ID } from "@/lib/auth";
 import { type PortalAppointment, portalApi, portalInfo, portalMe } from "@/lib/portal";
 import { dateOf, longDate, timeOf, WEEKDAYS } from "@/lib/time";
 import type { AppointmentStatus as S } from "@/types/api";
@@ -36,7 +37,7 @@ export default async function PortalHome({ params }: { params: Promise<{ slug: s
         <section>
           <h1 className="text-xl">Book an appointment</h1>
           <p className="mt-1 text-text-muted">Sign in or create an account to see available times and manage your bookings.</p>
-          <div className="mt-4"><SignInButton callbackUrl={`/book/${slug}`} /></div>
+          <div className="mt-4"><SignInButton callbackUrl={`/book/${slug}`} provider={PROVIDER_ID} /></div>
         </section>
         {info.branches.map((b) => (
           <section key={b.id} className="rounded border border-border bg-surface p-4">

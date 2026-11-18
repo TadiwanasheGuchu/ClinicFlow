@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Notice, Panel } from "@/components/ui/layout";
 import { acceptInvitation } from "@/features/onboarding/actions";
@@ -24,6 +25,12 @@ export default async function OnboardingPage() {
           practice.
         </p>
       </div>
+
+      {me.is_platform_admin && (
+        <Notice>
+          You are a platform administrator. <Link className="underline" href="/platform">Open platform administration</Link> to approve or suspend practices.
+        </Notice>
+      )}
 
       {invitations.length > 0 && (
         <Panel title="Invitations">

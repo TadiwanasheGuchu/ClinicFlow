@@ -57,11 +57,16 @@ class TokenVerifier:
         except jwt.PyJWTError as exc:
             logger.info("Rejected access token: %s", exc.__class__.__name__)
             raise Unauthenticated("Invalid or expired access token.") from exc
+        ns = self._settings.oidc_claim_namespace
+
+        def claim(name: str):  # type: ignore[no-untyped-def]
+            return claims.get(f"{ns}{name}") if ns and f"{ns}{name}" in claims else claims.get(name)
+
         return TokenClaims(
             sub=str(claims["sub"]),
-            email=(claims.get("email") or "").strip().lower() or None,
-            email_verified=bool(claims.get("email_verified", False)),
-            name=claims.get("name"),
+            email=(claim("email") or "").strip().lower() or None,
+            email_verified=bool(claim("email_verified") or False),
+            name=claim("name"),
             acr=claims.get("acr"),
             raw=claims,
         )

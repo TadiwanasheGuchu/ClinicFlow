@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-export function SignInButton({ callbackUrl = "/" }: { callbackUrl?: string }) {
+export function SignInButton({ callbackUrl = "/", provider }: { callbackUrl?: string; provider: string }) {
   const [pending, setPending] = useState(false);
   return (
     <Button
@@ -13,7 +13,7 @@ export function SignInButton({ callbackUrl = "/" }: { callbackUrl?: string }) {
       disabled={pending}
       onClick={() => {
         setPending(true);
-        void signIn("keycloak", { callbackUrl });
+        void signIn(provider, { callbackUrl });
       }}
     >
       {pending ? "Redirecting…" : "Continue to sign in"}

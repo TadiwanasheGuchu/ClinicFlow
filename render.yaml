@@ -1,0 +1,63 @@
+# Render Blueprint: one free web service running the web app, the API and the reminder
+# worker (deploy/render/Dockerfile). The database is Neon and sign-in is Auth0.
+# Setup steps: docs/DEPLOYMENT.md. Values marked `sync: false` are entered in the Render
+# dashboard and never committed.
+services:
+  - type: web
+    name: clinicflow
+    runtime: docker
+    plan: free
+    region: frankfurt   # same region as the Neon database (eu-central-1)
+    dockerfilePath: ./deploy/render/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: CLINICFLOW_ENVIRONMENT
+        value: production
+      # Neon: the clinicflow_app and clinicflow_owner roles (never the console's default role).
+      - key: CLINICFLOW_DATABASE_URL
+        sync: false
+      - key: CLINICFLOW_MIGRATION_DATABASE_URL
+        sync: false
+      # Auth0 (issuer keeps its trailing slash, e.g. https://your-tenant.eu.auth0.com/).
+      - key: CLINICFLOW_OIDC_ISSUER
+        sync: false
+      - key: CLINICFLOW_OIDC_JWKS_URL
+        sync: false
+      - key: CLINICFLOW_OIDC_AUDIENCE
+        value: clinicflow-api
+      - key: CLINICFLOW_OIDC_CLAIM_NAMESPACE
+        value: https://clinicflow.app/
+      - key: AUTH_PROVIDER
+        value: oidc
+      - key: AUTH_ISSUER
+        sync: false
+      - key: AUTH_CLIENT_ID
+        sync: false
+      - key: AUTH_CLIENT_SECRET
+        sync: false
+      - key: AUTH_AUDIENCE
+        value: clinicflow-api
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: CLINICFLOW_PUBLIC_WEB_URL
+        sync: false
+      # The API is internal to the container; no browser calls it directly.
+      - key: CLINICFLOW_CORS_ORIGINS
+        value: "[]"
+      - key: CLINICFLOW_RUN_WORKER_IN_API
+        value: "true"
+      # New practices wait for a platform administrator's approval.
+      - key: CLINICFLOW_ORGANISATION_SIGNUP
+        value: approval
+      # No SMS/WhatsApp provider is contracted yet: messages are kept as undelivered
+      # (visible under Messages) rather than pretending to send.
+      - key: CLINICFLOW_SMS_PROVIDER
+        value: none
+      - key: CLINICFLOW_WHATSAPP_PROVIDER
+        value: none
+      # Set to smtp and add CLINICFLOW_SMTP_* once an email account is ready (see docs).
+      - key: CLINICFLOW_EMAIL_PROVIDER
+        value: none
