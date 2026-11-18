@@ -57,6 +57,9 @@ of its database roles can bypass row-level security.
      Tokens never reach the browser: they stay in an encrypted, httpOnly cookie on the
      server. The API checks membership, suspension and permissions on every request,
      whatever the token's age.
+   - On its **Application Access** tab (after you create the application in the next
+     step), set **User Access** for the `ClinicFlow` application to **Authorized**.
+     Newer Auth0 tenants refuse tokens for an API until the application is allowed.
 3. **Applications → Applications → Create Application → Regular Web Application**, named
    `ClinicFlow`. In **Settings**:
    - Allowed Callback URLs: `https://YOUR-APP.onrender.com/api/auth/callback/oidc`
@@ -184,6 +187,7 @@ Messages never contain clinical information.
 | Render log: `Unsafe database roles` | A database URL uses Neon's default role or a role made in the Neon console. Use the `clinicflow_app` and `clinicflow_owner` roles from `setup.sql`. |
 | `/healthz` shows `api unavailable` | The API can't reach the database. Check both database URLs, the passwords and `?sslmode=require`. |
 | Auth0 page: *Callback URL mismatch* | Allowed Callback URLs must be exactly `https://YOUR-APP.onrender.com/api/auth/callback/oidc`. |
+| Log: *Client "…" is not authorized to access resource server "clinicflow-api"* | In Auth0, open APIs → ClinicFlow API → Application Access and set User Access for the ClinicFlow application to Authorized. |
 | Signed in, then sent straight back to sign-in | The issuer or audience doesn't match. Both issuer variables need the trailing slash, and both audience values must be `clinicflow-api`. |
 | *A verified email address is required* | Verify your email, or check that the `ClinicFlow claims` Action is deployed **and** added to the post-login trigger. |
 | Signed out after a while, every time | Refresh Token Rotation is on in Auth0 (turn it off) or Allow Offline Access is off on the API. |
