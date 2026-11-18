@@ -54,6 +54,12 @@ PERMISSIONS: tuple[PermissionDef, ...] = (
     PermissionDef("medical_aid.manage", "Prepare and track medical aid claims"),
     PermissionDef("reports.operational", "View operational reports"),
     PermissionDef("reports.financial", "View financial reports"),
+    # Phase 6: laboratory.
+    PermissionDef("lab.read", "View laboratory orders and results"),
+    PermissionDef(
+        "lab.process", "Record specimen collection, laboratory progress and results"
+    ),
+    PermissionDef("lab.configure", "Manage the laboratory test list and laboratories"),
 )
 
 PERMISSION_CODES: frozenset[str] = frozenset(p.code for p in PERMISSIONS)
@@ -62,7 +68,14 @@ PRIVILEGED_PERMISSIONS: frozenset[str] = frozenset(p.code for p in PERMISSIONS i
 # Clinical permissions take effect only for staff whose professional registration is
 # verified and current (see app.core.tenancy); holding the role alone is not enough.
 CLINICAL_PERMISSIONS: frozenset[str] = frozenset(
-    {"clinical.read", "clinical.write", "clinical.sign", "prescriptions.issue"}
+    {
+        "clinical.read",
+        "clinical.write",
+        "clinical.sign",
+        "prescriptions.issue",
+        "lab.read",
+        "lab.process",
+    }
 )
 _CLINICAL = CLINICAL_PERMISSIONS
 
@@ -105,6 +118,7 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "reports.operational",
                 "scheduling.manage",
                 "credentials.verify",
+                "lab.configure",
             }
         ),
     ),
@@ -178,6 +192,8 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "clinical.write",
                 "clinical.sign",
                 "prescriptions.issue",
+                "lab.read",
+                "lab.process",
             }
         ),
     ),
@@ -193,6 +209,22 @@ ROLE_TEMPLATES: tuple[RoleTemplate, ...] = (
                 "appointments.read",
                 "clinical.read",
                 "clinical.write",
+                "lab.read",
+                "lab.process",
+            }
+        ),
+    ),
+    RoleTemplate(
+        "lab_technician",
+        "Laboratory technician",
+        "Records specimen collection and laboratory results. No access to clinical notes.",
+        frozenset(
+            {
+                "organisation.read",
+                "branches.read",
+                "patients.read",
+                "lab.read",
+                "lab.process",
             }
         ),
     ),

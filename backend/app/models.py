@@ -15,6 +15,14 @@ from app.modules.clinical.models import (
     PrescriptionItem,
     Referral,
 )
+from app.modules.laboratory.models import (
+    Laboratory,
+    LabOrder,
+    LabOrderEvent,
+    LabOrderItem,
+    LabResult,
+    LabTest,
+)
 from app.modules.medical_aid.models import (
     ClaimEvent,
     MedicalAidClaim,
@@ -52,6 +60,12 @@ __all__ = [
     "Encounter",
     "Invoice",
     "InvoiceItem",
+    "LabOrder",
+    "LabOrderEvent",
+    "LabOrderItem",
+    "LabResult",
+    "LabTest",
+    "Laboratory",
     "MedicalAidClaim",
     "MedicalAidFund",
     "MedicalAidMembership",
