@@ -13,12 +13,17 @@ import { AmendButton, DiagnosisForm, NewNote, NoteEditor, PrescriptionForm, Reas
 import { loadClinical } from "@/features/clinical/load";
 import { orderTests } from "@/features/lab/actions";
 import { LabOrderForm } from "@/features/lab/forms";
+import { recordChart } from "@/features/dental/actions";
+import { ChartEntryForm } from "@/features/dental/forms";
+import { linkSession } from "@/features/physio/actions";
+import { QuickForm } from "@/components/ui/quick-form";
+import { enabledModules } from "@/lib/specialty";
 import { LabStatus } from "@/features/lab/status";
 import { api } from "@/lib/api";
 import { ENCOUNTER_TYPE_LABEL, NOTE_SECTIONS, NOTE_TYPE_LABEL, OBS_LABEL } from "@/lib/clinical";
 import { formatDateTime } from "@/lib/format";
 import { requirePermission } from "@/lib/session";
-import type { AllergySummary, ClinicalNote, EncounterDetail, Laboratory, LabOrderSummary, LabTest, Page, Patient } from "@/types/api";
+import type { AllergySummary, ClinicalNote, EncounterDetail, Laboratory, LabOrderSummary, LabTest, Page, Patient, PhysioEpisode } from "@/types/api";
 
 export const metadata: Metadata = { title: "Consultation" };
 
@@ -51,6 +56,10 @@ export default async function ConsultationPage({ params }: { params: Promise<{ i
   const open = e.status === "open";
   const canSeeLab = inBranch("lab.read");
   const canOrderLab = canWrite && open;
+  const modules = await enabledModules();
+  const episodes = modules.has("physiotherapy")
+    ? (await api<PhysioEpisode[]>(`/patients/${e.patient_id}/physio-episodes`)).filter((x) => x.status === "active")
+    : [];
   const [labOrders, labTests, laboratories] = await Promise.all([
     canSeeLab ? api<Page<LabOrderSummary>>("/lab-orders", { query: { encounter_id: e.id, group: "all", limit: 50 } }) : Promise.resolve(null),
     canOrderLab ? api<LabTest[]>("/laboratory-tests") : Promise.resolve([] as LabTest[]),
@@ -205,6 +214,28 @@ export default async function ConsultationPage({ params }: { params: Promise<{ i
             {canOrderLab ? (
               <LabOrderForm action={orderTests.bind(null, e.id)} tests={labTests} laboratories={laboratories} patientName={name} />
             ) : (labOrders?.items.length ?? 0) === 0 && <p className="text-text-muted">No tests requested.</p>}
+          </Panel>
+        )}
+
+        {modules.has("dental") && (
+          <Panel title="Dental chart" description="Findings for this visit. Tooth numbers use FDI notation (11–48, primary 51–85).">
+            {canWrite && open ? <ChartEntryForm action={recordChart.bind(null, e.id, patient.id)} /> : <p className="text-text-muted">Charting is done in an open consultation.</p>}
+            <p className="mt-3 text-sm"><Link className="text-primary hover:underline" href={`/patients/${patient.id}/dental`}>Full chart and treatment plans</Link></p>
+          </Panel>
+        )}
+        {modules.has("physiotherapy") && (
+          <Panel title="Physiotherapy">
+            {episodes.length === 0 ? <p className="text-text-muted">No active episode of care.</p> : (
+              <ul className="flex flex-col gap-2">
+                {episodes.map((ep) => (
+                  <li key={ep.id} className="flex flex-wrap items-center justify-between gap-2">
+                    <span><Link className="text-primary hover:underline" href={`/physio-episodes/${ep.id}`}>{ep.condition}</Link> <span className="text-sm text-text-muted">· {ep.sessions_done}{ep.planned_sessions ? ` of ${ep.planned_sessions}` : ""} sessions</span></span>
+                    {canWrite && <QuickForm action={linkSession.bind(null, ep.id, e.id)} submit="Count as a session" variant="secondary" />}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-3 text-sm"><Link className="text-primary hover:underline" href={`/patients/${patient.id}/physio`}>Episodes of care</Link></p>
           </Panel>
         )}
 

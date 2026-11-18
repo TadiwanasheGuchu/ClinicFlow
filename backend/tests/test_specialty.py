@@ -242,3 +242,14 @@ def test_specialty_cross_tenant(dental, new_actor, add_member):
         ).status_code
         == 404
     )
+
+
+def test_clinicians_can_read_but_not_edit_the_price_list(visit):  # noqa: F811
+    doctor = visit["doctor"]
+    assert doctor.get("/api/v1/services").status_code == 200
+    created = doctor.post(
+        "/api/v1/services",
+        json={"code": "X1", "name": "Something", "unit_price": "1.00", "tax_category": "exempt"},
+    )
+    assert created.status_code == 403
+    assert doctor.get("/api/v1/invoices").status_code == 403

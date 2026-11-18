@@ -78,6 +78,11 @@ export function OrganisationForm({ organisation, publicUrl }: { organisation: Or
         <Checkbox name="settings.reminders_enabled" defaultChecked={s.reminders_enabled} label="Send appointment reminders" description="Messages contain only the practice, branch, date, time and reference — never clinical details." className="sm:col-span-2" />
         {input("settings.reminder_hours_before", "Send reminder (hours before)", s.reminder_hours_before, { required: true, type: "number", min: 1, max: 168 })}
       </fieldset>
+      <fieldset className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+        <legend className="mb-2 text-sm font-medium text-text">Specialty modules</legend>
+        <Checkbox name="settings.specialty_modules" value="dental" defaultChecked={s.specialty_modules?.includes("dental")} label="Dental" description="Tooth chart, treatment plans and quotations." />
+        <Checkbox name="settings.specialty_modules" value="physiotherapy" defaultChecked={s.specialty_modules?.includes("physiotherapy")} label="Physiotherapy" description="Episodes of care, sessions and outcome measures." />
+      </fieldset>
       <div>
         <SubmitButton>Save organisation</SubmitButton>
       </div>

@@ -27,6 +27,7 @@ export type Access = {
 };
 
 export type OrganisationSettings = {
+  specialty_modules: ("dental" | "physiotherapy")[];
   patient_number_prefix: string;
   invoice_number_prefix: string;
   default_appointment_minutes: number;
@@ -432,3 +433,25 @@ export type Leave = {
 };
 export type Roster = { start: string; end: string; branch_id: string | null; staff: { membership_id: string; name: string; profession: string | null }[]; shifts: Shift[]; leave: Leave[]; hours: Record<string, number> };
 export type MyRoster = { start: string; end: string; membership_id: string; shifts: Shift[]; leave: Leave[]; branch_names: Record<string, string> };
+
+// --- Specialty modules (Phase 6) ---
+export type ChartEntry = { id: string; encounter_id: string; tooth: number; surfaces: string; condition: string; note: string | null; status: "recorded" | "entered_in_error"; status_reason: string | null; recorded_by_name: string; recorded_at: string };
+export type DentalChart = { patient_id: string; teeth: Record<string, ChartEntry[]>; history: ChartEntry[] };
+export type DentalPlan = {
+  id: string; plan_number: string; patient_id: string; branch_id: string; title: string; notes: string | null;
+  status: "draft" | "proposed" | "accepted" | "declined" | "completed" | "cancelled"; created_by_name: string; created_at: string;
+  proposed_at: string | null; quote_valid_until: string | null; decided_at: string | null; decision_note: string | null; closed_at: string | null; cancel_reason: string | null;
+  total: string; done_total: string; uninvoiced_done_total: string;
+  items: { id: string; position: number; tooth: number | null; surfaces: string; procedure: string; service_id: string | null; fee: string; status: "planned" | "done" | "cancelled"; done_at: string | null; invoice_id: string | null }[];
+};
+export type PhysioMeasurement = { id: string; encounter_id: string; measure: string; label: string; side: string | null; value: string; unit: string; measured_at: string; status: "recorded" | "entered_in_error"; status_reason: string | null; recorded_by_name: string };
+export type PhysioEpisode = {
+  id: string; patient_id: string; branch_id: string; condition: string; body_region: string | null; referral_source: string | null; goals: string | null;
+  planned_sessions: number | null; sessions_done: number; status: "active" | "discharged"; started_on: string; clinician_name: string;
+  discharged_on: string | null; discharge_outcome: string | null; discharge_summary: string | null;
+};
+export type PhysioEpisodeDetail = PhysioEpisode & {
+  sessions: { session_number: number; encounter_id: string; started_at: string; clinician_name: string }[];
+  series: { measure: string; label: string; side: string | null; unit: string; first: string; latest: string; change: string; points: PhysioMeasurement[] }[];
+  measurements: PhysioMeasurement[];
+};

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.exceptions import Conflict, NotFound
-from app.core.tenancy import TenantContext, require
+from app.core.tenancy import TenantContext, TenantDep, deny, require
 from app.modules.billing import service
 from app.modules.billing.models import CreditNote, Invoice, InvoiceItem, Payment, Refund, Service
 from app.modules.billing.schemas import (
@@ -41,6 +41,16 @@ from app.shared.schemas import Page, PageParams
 router = APIRouter(tags=["billing"])
 DB = Annotated[Session, Depends(get_db)]
 Reader = Annotated[TenantContext, Depends(require("billing.read"))]
+
+
+def _price_list_reader(ctx: TenantDep) -> TenantContext:
+    """Clinicians quote from the price list (e.g. dental treatment plans); it's not sensitive."""
+    if not (ctx.has("billing.read") or ctx.has("clinical.write")):
+        raise deny(ctx, "billing.read")
+    return ctx
+
+
+PriceListReader = Annotated[TenantContext, Depends(_price_list_reader)]
 Manager = Annotated[TenantContext, Depends(require("billing.manage"))]
 Adjuster = Annotated[TenantContext, Depends(require("billing.adjust"))]
 # Prices are set by billing staff and owners, not the front desk.
@@ -51,7 +61,7 @@ CatalogueManager = Annotated[TenantContext, Depends(require("billing.adjust", or
 
 
 @router.get("/services", response_model=list[ServiceRead])
-def list_services(ctx: Reader, db: DB, include_inactive: bool = False) -> object:
+def list_services(ctx: PriceListReader, db: DB, include_inactive: bool = False) -> object:
     query = select(Service).order_by(Service.name)
     if not include_inactive:
         query = query.where(Service.is_active.is_(True))

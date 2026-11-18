@@ -8,6 +8,8 @@ import { Table, TD, TH, THead, TR } from "@/components/ui/table";
 import { addAllergy, changeAllergy, noKnownAllergies, startConsultation } from "@/features/clinical/actions";
 import { AllergyForm, ReasonAction, SimpleAction } from "@/features/clinical/forms";
 import { loadClinical } from "@/features/clinical/load";
+import { ButtonLink } from "@/components/ui/button";
+import { enabledModules } from "@/lib/specialty";
 import { LabStatus } from "@/features/lab/status";
 import { api } from "@/lib/api";
 import { ENCOUNTER_TYPE_LABEL, OBS_LABEL, SEVERITY_LABEL } from "@/lib/clinical";
@@ -26,6 +28,7 @@ export default async function ClinicalRecordPage({ params }: { params: Promise<{
     ? await api<Page<LabOrderSummary>>("/lab-orders", { query: { patient_id: patient.id, group: "all", limit: 20 } })
     : null;
   const name = `${patient.first_name} ${patient.last_name}`;
+  const modules = await enabledModules();
   const canWrite = hasPermission(access, "clinical.write");
   const writeBranches = canWrite
     ? (await api<Page<Branch>>("/branches", { query: { limit: 200 } })).items.filter((b) =>
@@ -35,7 +38,15 @@ export default async function ClinicalRecordPage({ params }: { params: Promise<{
   return (
     <>
       <PatientIdentityBanner patient={{ name, patient_number: patient.patient_number, date_of_birth: patient.date_of_birth, sex: patient.sex }} allergies={summary.allergies} />
-      <PageHeader title="Clinical record" description={name} back={{ href: `/patients/${patient.id}`, label: "Patient details" }} />
+      <PageHeader
+        title="Clinical record"
+        description={name}
+        back={{ href: `/patients/${patient.id}`, label: "Patient details" }}
+        actions={<>
+          {modules.has("dental") && <ButtonLink variant="secondary" href={`/patients/${patient.id}/dental`}>Dental</ButtonLink>}
+          {modules.has("physiotherapy") && <ButtonLink variant="secondary" href={`/patients/${patient.id}/physio`}>Physiotherapy</ButtonLink>}
+        </>}
+      />
       <div className="flex max-w-5xl flex-col gap-4">
         <Panel title="Allergies">
           {summary.allergies.allergies.length > 0 ? (

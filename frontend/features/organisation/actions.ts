@@ -36,6 +36,7 @@ export async function updateOrganisation(_: FormState, form: FormData): Promise<
             vat_rate: required(form, "settings.vat_rate"),
             vat_number: optional(form, "settings.vat_number"),
             invoice_due_days: int(form, "settings.invoice_due_days"),
+            specialty_modules: form.getAll("settings.specialty_modules").map(String),
           },
           ...(optional(form, "slug") ? { slug: required(form, "slug").toLowerCase() } : {}),
         },

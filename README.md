@@ -4,7 +4,7 @@ Healthcare practice management for independent practitioners, private practices 
 multi-branch clinics in Namibia. See [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) for the product
 specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
 
-**Status:** Phases 1–5 are built, plus the Phase 6 reports, laboratory, inventory and rostering modules.
+**Status:** Phases 1–6 are built. Next: Phase 7 (security testing, pilot and launch).
 
 - **Platform foundation:** multi-tenancy, authentication, branches, staff, roles and
   permissions, audit log.
@@ -50,7 +50,13 @@ specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
   week, and leave: staff request it, managers approve it, and approved leave for a
   practitioner blocks their bookings. Everyone has a "My shifts and leave" page.
 
-Not yet: dental and physiotherapy (Phase 6); clinical document uploads
+- **Specialty modules (switched on per practice under Organisation):** dental — FDI tooth
+  chart, treatment plans issued as printable quotations (frozen once quoted), accepted
+  treatment marked done and put on a draft invoice; physiotherapy — episodes of care with
+  goals, sessions counted from consultations, outcome measures (pain, PSFS, range of
+  movement, strength) with first-to-latest progress, and discharge.
+
+Not yet: clinical document uploads
 (needs object storage).
 
 ## Layout
