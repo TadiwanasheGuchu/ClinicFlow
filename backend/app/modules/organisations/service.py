@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core import audit
+from app.core.config import get_settings
 from app.core.db import set_scope
 from app.core.permissions import OWNER_ROLE_KEY, ROLE_TEMPLATES
 from app.core.security import CurrentUser
@@ -32,7 +33,12 @@ def register_organisation(
         phone=data.phone,
         currency="NAD",
         timezone=data.timezone,
-        status="active",
+        status=(
+            "pending"
+            if get_settings().organisation_signup == "approval"
+            and not current.user.is_platform_admin
+            else "active"
+        ),
         settings=OrganisationSettings().model_dump(mode="json"),
         created_by=current.id,
     )

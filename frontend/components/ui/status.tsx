@@ -6,6 +6,7 @@ type Tone = "success" | "warning" | "danger" | "neutral";
 const STATUS: Record<string, { label: string; tone: Tone; icon: LucideIcon }> = {
   active: { label: "Active", tone: "success", icon: CircleCheck },
   invited: { label: "Invited", tone: "warning", icon: CircleDashed },
+  pending: { label: "Awaiting approval", tone: "warning", icon: CircleDashed },
   suspended: { label: "Suspended", tone: "danger", icon: CirclePause },
   inactive: { label: "Inactive", tone: "neutral", icon: CircleMinus },
 };

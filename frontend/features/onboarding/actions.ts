@@ -25,6 +25,7 @@ export async function registerOrganisation(_: FormState, form: FormData): Promis
     });
   });
   if (created) {
+    if (created.status !== "active") redirect("/onboarding"); // awaiting platform approval
     await setActiveOrgId(created.id);
     redirect("/organisation");
   }

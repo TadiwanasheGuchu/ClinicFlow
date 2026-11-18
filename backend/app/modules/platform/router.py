@@ -51,7 +51,7 @@ class TenantRead(Schema):
 
 
 class TenantStatusUpdate(Schema):
-    status: Literal["active", "suspended"]
+    status: Literal["active", "suspended"]  # "pending" practices are approved by activating
     reason: str = Field(min_length=3, max_length=500)
 
 
@@ -61,7 +61,7 @@ def list_tenants(
     db: DB,
     page: Annotated[PageParams, Depends()],
     q: Annotated[str | None, Query(max_length=100)] = None,
-    status: Literal["active", "suspended"] | None = None,
+    status: Literal["pending", "active", "suspended"] | None = None,
 ) -> object:
     query = select(Organisation)
     if q:

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { Panel } from "@/components/ui/layout";
+import { Notice, Panel } from "@/components/ui/layout";
 import { acceptInvitation } from "@/features/onboarding/actions";
 import { RegisterOrganisationForm } from "@/features/onboarding/register-form";
 import { api } from "@/lib/api";
@@ -12,6 +12,7 @@ export default async function OnboardingPage() {
   const me = await api<Me>("/me", { tenant: false });
   const invitations = me.memberships.filter((m) => m.status === "invited");
   const suspended = me.memberships.filter((m) => m.status === "suspended");
+  const pending = me.memberships.filter((m) => m.status === "active" && m.organisation_status === "pending");
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-10">
@@ -51,12 +52,19 @@ export default async function OnboardingPage() {
         </p>
       )}
 
-      <Panel
+      {pending.length > 0 && (
+        <Notice>
+          {pending.map((p) => p.organisation_name).join(", ")} {pending.length === 1 ? "is" : "are"} waiting
+          for approval by the ClinicFlow team. You’ll be able to sign in to it once it’s approved.
+        </Notice>
+      )}
+
+      {pending.length === 0 && <Panel
         title="Register a practice"
         description="You’ll be the owner. You can add branches, staff and roles afterwards."
       >
         <RegisterOrganisationForm />
-      </Panel>
+      </Panel>}
     </main>
   );
 }

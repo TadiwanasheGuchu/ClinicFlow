@@ -68,6 +68,7 @@ export default async function PlatformPage({
                   action={setTenantStatus.bind(null, t.id, t.status === "active" ? "suspended" : "active")}
                   name={t.name}
                   suspend={t.status === "active"}
+                  approve={t.status === "pending"}
                 />
               </TD>
             </TR>

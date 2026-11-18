@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     # Public URL of the web app, used in patient messages that link to the portal.
     public_web_url: str = "http://localhost:3000"
 
+    # "approval": practices registered by ordinary users start as "pending" until a platform
+    # administrator activates them (use on shared hosting). "open": active immediately.
+    organisation_signup: Literal["open", "approval"] = "open"
+
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
     @property

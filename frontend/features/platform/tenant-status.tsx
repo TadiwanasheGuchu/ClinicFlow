@@ -9,16 +9,16 @@ import { type FormState, initialFormState } from "@/lib/form";
 
 type Action = (state: FormState, form: FormData) => Promise<FormState>;
 
-export function TenantStatusControl({ action, name, suspend }: { action: Action; name: string; suspend: boolean }) {
+export function TenantStatusControl({ action, name, suspend, approve = false }: { action: Action; name: string; suspend: boolean; approve?: boolean }) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
   const [open, setOpen] = useState(false);
-  const label = suspend ? `Suspend ${name}` : `Reactivate ${name}`;
+  const label = suspend ? `Suspend ${name}` : approve ? `Approve ${name}` : `Reactivate ${name}`;
   if (!open) {
     return (
       <div className="flex flex-col items-end gap-1">
         <FormMessage state={state} />
         <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-          {suspend ? "Suspend" : "Reactivate"}
+          {suspend ? "Suspend" : approve ? "Approve" : "Reactivate"}
         </Button>
       </div>
     );

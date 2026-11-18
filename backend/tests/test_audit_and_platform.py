@@ -69,3 +69,32 @@ def test_mfa_required_for_privileged_actions(owner, monkeypatch):
     )
     # Non-privileged reads are unaffected.
     assert owner.client.get("/api/v1/branches", headers=owner.headers(acr="1")).status_code == 200
+
+
+def test_organisation_signup_needs_approval_when_configured(new_actor, owner_db, monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "organisation_signup", "approval")
+    applicant = new_actor("Applicant")
+    created = applicant.post("/api/v1/organisations", json={"name": "Pending Practice"})
+    assert created.status_code == 201, created.text
+    org_id = created.json()["id"]
+    assert created.json()["status"] == "pending"
+    applicant.org_id = org_id
+    # A pending practice can't be used yet.
+    assert applicant.get("/api/v1/organisation").status_code == 403
+
+    admin = new_actor("Platform Admin")
+    admin.get("/api/v1/me")
+    owner_db.execute("UPDATE users SET is_platform_admin = true WHERE email = %s", (admin.email,))
+    pending = admin.get("/api/v1/platform/organisations", params={"status": "pending"}).json()
+    assert org_id in [o["id"] for o in pending["items"]]
+    approved = admin.patch(
+        f"/api/v1/platform/organisations/{org_id}",
+        json={"status": "active", "reason": "Pilot clinic agreement signed"},
+    )
+    assert approved.status_code == 200, approved.text
+    assert applicant.get("/api/v1/organisation").status_code == 200
+    # Platform administrators' own practices aren't held for approval.
+    own = admin.post("/api/v1/organisations", json={"name": "Platform Demo"}).json()
+    assert own["status"] == "active"
