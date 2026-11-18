@@ -94,7 +94,9 @@ limits. Before staff start using the system, add your own email provider under
 
 ## 3. App (Render)
 
-1. Merge the release branch into `main` on GitHub. Render deploys `main`.
+1. On GitHub, open **Pull requests → New pull request**. Set *base* to `main` and
+   *compare* to the release branch, then **Create pull request** and **Merge**. Render
+   deploys `main`.
 2. Sign up at render.com with your GitHub account. Choose **New → Blueprint** and pick
    this repository. Render reads [`render.yaml`](../render.yaml).
 3. Fill in the values it asks for:
@@ -172,6 +174,21 @@ under **Messages** as *not delivered*. Nothing is sent.
   in `backend/app/modules/notifications/adapters.py`.
 
 Messages never contain clinical information.
+
+---
+
+## Troubleshooting
+
+| What you see | Likely cause and fix |
+|---|---|
+| Render log: `Unsafe database roles` | A database URL uses Neon's default role or a role made in the Neon console. Use the `clinicflow_app` and `clinicflow_owner` roles from `setup.sql`. |
+| `/healthz` shows `api unavailable` | The API can't reach the database. Check both database URLs, the passwords and `?sslmode=require`. |
+| Auth0 page: *Callback URL mismatch* | Allowed Callback URLs must be exactly `https://YOUR-APP.onrender.com/api/auth/callback/oidc`. |
+| Signed in, then sent straight back to sign-in | The issuer or audience doesn't match. Both issuer variables need the trailing slash, and both audience values must be `clinicflow-api`. |
+| *A verified email address is required* | Verify your email, or check that the `ClinicFlow claims` Action is deployed **and** added to the post-login trigger. |
+| Signed out after a while, every time | Refresh Token Rotation is on in Auth0 (turn it off) or Allow Offline Access is off on the API. |
+| First page load takes about a minute | The free service was asleep. Check that the UptimeRobot monitor is running. |
+| Backup job: *query would be affected by row-level security* | The backup URL's role can't bypass row-level security. Use `clinicflow_maintenance` (or the default role, see step 1). |
 
 ---
 
