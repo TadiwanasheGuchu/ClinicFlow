@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -61,6 +61,21 @@ class Settings(BaseSettings):
     organisation_signup: Literal["open", "approval"] = "open"
 
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+
+    @field_validator("oidc_issuer", "oidc_jwks_url", "public_web_url", mode="before")
+    @classmethod
+    def _url(cls, value: object, info) -> object:  # type: ignore[no-untyped-def]
+        """Catch copy-paste mistakes at start-up rather than at the first sign-in."""
+        if value is None:
+            return None
+        text = str(value).strip()
+        if not text and info.field_name == "oidc_jwks_url":
+            return None
+        if not text.startswith(("https://", "http://")):
+            raise ValueError(
+                f"CLINICFLOW_{info.field_name.upper()} must start with https:// (got {text[:40]!r})"
+            )
+        return text
 
     @property
     def jwks_url(self) -> str:
