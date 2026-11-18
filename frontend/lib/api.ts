@@ -94,6 +94,13 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   if (response.status === 401) redirect("/signin");
   if (response.status === 204) return undefined as T;
   const body = await response.json().catch(() => null);
-  if (!response.ok) throw parseError(response.status, body);
+  if (!response.ok) {
+    const error = parseError(response.status, body);
+    // The account itself can't be used yet (signed in, but refused by the API).
+    if (error.code === "email_unverified" || error.code === "identity_conflict") {
+      redirect(`/account?problem=${error.code}`);
+    }
+    throw error;
+  }
   return body as T;
 }
