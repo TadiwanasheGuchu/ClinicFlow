@@ -396,3 +396,39 @@ export type LabOrderDetail = LabOrderSummary & {
   items: { id: string; position: number; test_code: string | null; test_name: string; specimen_type: string | null; resulted: boolean; results: LabResult[] }[];
   events: { from_status: string | null; to_status: LabOrderStatus; actor_name: string; occurred_at: string; note: string | null }[];
 };
+
+// --- Inventory (Phase 6) ---
+export type InventoryItem = { id: string; sku: string; name: string; category: string | null; unit: string; reorder_level: number; track_expiry: boolean; is_active: boolean };
+export type Supplier = { id: string; name: string; contact_person: string | null; phone: string | null; email: string | null; address: string | null; is_active: boolean };
+export type StockBatch = {
+  id: string; item_id: string; branch_id: string; batch_number: string | null; expiry_date: string | null; unit_cost: string;
+  quantity_received: number; quantity_remaining: number; received_at: string; supplier_name: string | null; expired: boolean;
+};
+export type StockLevel = {
+  item_id: string; sku: string; name: string; category: string | null; unit: string; reorder_level: number; branch_id: string; branch_name: string;
+  on_hand: number; usable: number; expired: number; expiring_soon: number; next_expiry: string | null; value: string; below_reorder: boolean;
+};
+export type StockOverview = { levels: StockLevel[]; total_value: string; expiry_window_days: number };
+export type ItemStock = { item: InventoryItem; batches: StockBatch[] };
+export type MovementType = "receipt" | "usage" | "transfer_out" | "transfer_in" | "count" | "write_off";
+export type StockMovement = {
+  id: string; item_id: string; item_name: string; branch_id: string; branch_name: string; batch_id: string; batch_number: string | null;
+  movement_type: MovementType; quantity: number; reason: string | null; reference: string | null; performed_by_name: string; occurred_at: string;
+};
+export type POStatus = "draft" | "ordered" | "partially_received" | "received" | "cancelled";
+export type PurchaseOrder = {
+  id: string; order_number: string; status: POStatus; branch_id: string; branch_name: string; supplier_id: string; supplier_name: string;
+  expected_on: string | null; notes: string | null; total: string; created_at: string; ordered_at: string | null; cancelled_at: string | null; cancel_reason: string | null;
+  lines: { id: string; item_id: string; item_name: string; sku: string; unit: string; track_expiry: boolean; quantity_ordered: number; quantity_received: number; unit_cost: string; line_total: string }[];
+};
+
+// --- Roster (Phase 6) ---
+export type LeaveType = "annual" | "sick" | "family" | "study" | "unpaid" | "other";
+export type Shift = { id: string; branch_id: string; membership_id: string; staff_name: string; starts_at: string; ends_at: string; duty: string | null; notes: string | null; status: "scheduled" | "cancelled" };
+export type Leave = {
+  id: string; membership_id: string; staff_name: string; starts_on: string; ends_on: string; status: "requested" | "approved" | "declined" | "cancelled";
+  leave_type: LeaveType | null; reason: string | null; decided_by_name: string | null; decided_at: string | null; decision_note: string | null; blocks_bookings: boolean;
+  appointments_affected?: number | null; shifts_affected?: number | null;
+};
+export type Roster = { start: string; end: string; branch_id: string | null; staff: { membership_id: string; name: string; profession: string | null }[]; shifts: Shift[]; leave: Leave[]; hours: Record<string, number> };
+export type MyRoster = { start: string; end: string; membership_id: string; shifts: Shift[]; leave: Leave[]; branch_names: Record<string, string> };

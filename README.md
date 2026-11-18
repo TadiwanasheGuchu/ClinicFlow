@@ -4,7 +4,7 @@ Healthcare practice management for independent practitioners, private practices 
 multi-branch clinics in Namibia. See [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md) for the product
 specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
 
-**Status:** Phases 1–5 are built, plus the Phase 6 reports and laboratory module.
+**Status:** Phases 1–5 are built, plus the Phase 6 reports, laboratory, inventory and rostering modules.
 
 - **Platform foundation:** multi-tenancy, authentication, branches, staff, roles and
   permissions, audit log.
@@ -41,7 +41,16 @@ specification and [`docs/DESIGN.md`](docs/DESIGN.md) for the design rules.
   never edited (only marked entered in error). Manual workflow: no laboratory system is
   connected and report uploads wait for object storage.
 
-Not yet: dental, physiotherapy, inventory and staff rostering (Phase 6); clinical document uploads
+- **Inventory:** items and suppliers, stock batches per branch with batch numbers and expiry
+  dates, purchase orders and deliveries, usage (first expiry first out, never expired stock),
+  stock counts, write-offs, transfers between branches, reorder and expiry lists, valuation
+  at cost and a full stock history. The database refuses negative stock and edits to history.
+
+- **Staff rostering:** a weekly roster per branch (overlapping shifts are refused), repeat a
+  week, and leave: staff request it, managers approve it, and approved leave for a
+  practitioner blocks their bookings. Everyone has a "My shifts and leave" page.
+
+Not yet: dental and physiotherapy (Phase 6); clinical document uploads
 (needs object storage).
 
 ## Layout
