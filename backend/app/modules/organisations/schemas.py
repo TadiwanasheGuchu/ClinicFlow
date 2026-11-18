@@ -9,6 +9,7 @@ from pydantic import EmailStr, Field, field_validator, model_validator
 from app.shared.schemas import Schema
 
 _TIMEZONES = available_timezones()
+SpecialtyModule = Literal["dental", "physiotherapy"]
 
 
 class OrganisationSettings(Schema):
@@ -33,6 +34,8 @@ class OrganisationSettings(Schema):
     vat_rate: Decimal = Field(Decimal("15.00"), ge=0, le=100, max_digits=5, decimal_places=2)
     vat_number: str | None = Field(None, max_length=30)
     invoice_due_days: int = Field(30, ge=0, le=365)
+    # Optional specialty extensions (Phase 6). The core record works without them.
+    specialty_modules: list[SpecialtyModule] = Field(default_factory=list)
 
 
 class OrganisationSettingsUpdate(Schema):
@@ -52,6 +55,7 @@ class OrganisationSettingsUpdate(Schema):
     vat_rate: Decimal | None = Field(None, ge=0, le=100, max_digits=5, decimal_places=2)
     vat_number: str | None = Field(None, max_length=30)
     invoice_due_days: int | None = Field(None, ge=0, le=365)
+    specialty_modules: list[SpecialtyModule] | None = Field(None, max_length=2)
 
 
 class _OrganisationFields(Schema):

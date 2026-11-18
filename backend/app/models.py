@@ -15,6 +15,7 @@ from app.modules.clinical.models import (
     PrescriptionItem,
     Referral,
 )
+from app.modules.dental.models import ChartEntry, PlanItem, TreatmentPlan
 from app.modules.inventory.models import (
     InventoryItem,
     PurchaseOrder,
@@ -41,6 +42,7 @@ from app.modules.members.models import Membership, MembershipRole
 from app.modules.notifications.models import Notification
 from app.modules.organisations.models import Organisation
 from app.modules.patients.models import Patient
+from app.modules.physio.models import Episode, EpisodeSession, Measurement
 from app.modules.portal.models import OrganisationSlug, PatientAccount, PatientLinkCode
 from app.modules.roles.models import Permission, Role, RolePermission
 from app.modules.roster.models import LeaveRequest, Shift
@@ -62,11 +64,14 @@ __all__ = [
     "AppointmentType",
     "AuditLog",
     "Branch",
+    "ChartEntry",
     "ClaimEvent",
     "ClinicalNote",
     "CreditNote",
     "Diagnosis",
     "Encounter",
+    "Episode",
+    "EpisodeSession",
     "InventoryItem",
     "Invoice",
     "InvoiceItem",
@@ -77,6 +82,7 @@ __all__ = [
     "LabTest",
     "Laboratory",
     "LeaveRequest",
+    "Measurement",
     "MedicalAidClaim",
     "MedicalAidFund",
     "MedicalAidMembership",
@@ -92,6 +98,7 @@ __all__ = [
     "PatientLinkCode",
     "Payment",
     "Permission",
+    "PlanItem",
     "Prescription",
     "PrescriptionItem",
     "Provider",
@@ -109,5 +116,6 @@ __all__ = [
     "StockBatch",
     "StockMovement",
     "Supplier",
+    "TreatmentPlan",
     "User",
 ]
